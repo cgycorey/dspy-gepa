@@ -1,6 +1,10 @@
 # DSPY-GEPA: Adaptive Multi-Objective Prompt Evolution
 
-A genetic evolutionary programming framework that extends GEPA with adaptive optimization strategies for prompt and DSPY program evolution.
+A genetic evolutionary programming framework that extends [GEPA](https://github.com/gepa-ai/gepa.git) with adaptive optimization strategies for prompt and DSPY program evolution.
+
+## 🙏 Attribution
+
+This project is built upon and extends the [GEPA (Genetic-Pareto Algorithm)](https://github.com/gepa-ai/gepa.git) framework. GEPA provides the core genetic programming and Pareto optimization capabilities that form the foundation of this work. We deeply appreciate the GEPA team's excellent work in creating this powerful optimization framework.
 
 ## ✅ What's Currently Implemented
 
@@ -270,6 +274,15 @@ print('✅ DSPY integration working')
 ## 📝 Development Status
 
 This is an **alpha release** with core functionality implemented. The AMOPE algorithm is fully functional and tested. Additional features like advanced DSPY integration and LLM reflection are planned for future releases.
+
+## 🔗 Dependencies & Acknowledgments
+
+This project extends and builds upon:
+- **[GEPA (Genetic-Pareto Algorithm)](https://github.com/gepa-ai/gepa.git)** - Core genetic programming and Pareto optimization framework
+- **[DSPy](https://github.com/stanfordnlp/dspy)** - Programming with foundation models (optional dependency)
+- **Open source community** - Various packages for machine learning and optimization
+
+We deeply appreciate the GEPA team's excellent work in creating this powerful optimization framework that forms the foundation of this project.
 
 ## 📄 License
 

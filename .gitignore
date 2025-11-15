@@ -231,9 +231,6 @@ Thumbs.db
 # UV
 .uv_cache/
 
-# Pre-commit cache
-.pre-commit/
-
 # Local configuration files
 config.local.yaml
 .env.local
