@@ -13,9 +13,9 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 authors = [
-    {name = "cgycorey", email = "corey@example.com"},
+    {name = "cgycorey", email = "cgycorey@hotmail.com"},
 ]
-copyright = "Copyright (c) 2024 cgycorey"
+copyright = "Copyright (c) 2025 cgycorey"
 keywords = ["puppy", "dspy", "gepa", "ai", "agents", "llm", "machine-learning"]
 classifiers = [
     "Development Status :: 3 - Alpha",
