@@ -1,0 +1,131 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dspy_gepa", "src/gepa"]
+
+[project]
+name = "dspy-gepa"
+version = "0.1.0"
+description = "Advanced prompt optimization framework extending GEPA with novel DSPy integration algorithms for evolutionary text component refinement"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    {name = "cgycorey", email = "corey@example.com"},
+]
+copyright = "Copyright (c) 2024 cgycorey"
+keywords = ["puppy", "dspy", "gepa", "ai", "agents", "llm", "machine-learning"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "gepa @ git+https://github.com/gepa-ai/gepa.git",
+    "dspy>=2.4.0",
+    "litellm>=1.40.0",
+    "requests>=2.28.0",
+    "python-dotenv>=1.0.0",
+    "tqdm>=4.66.0",
+    "psutil>=7.1.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "pre-commit>=3.6.0",
+    "ruff>=0.2.0",
+    "black>=24.0.0",
+    "isort>=5.13.0",
+    "mypy>=1.8.0",
+    "pyright>=1.1.0",
+    "types-PyYAML>=6.0.0",
+    "types-requests>=2.31.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/cgycorey/puppy-project"
+Repository = "https://github.com/cgycorey/puppy-project"
+"Bug Tracker" = "https://github.com/cgycorey/puppy-project/issues"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "pre-commit>=3.6.0",
+    "ruff>=0.2.0",
+    "black>=24.0.0",
+    "isort>=5.13.0",
+    "mypy>=1.8.0",
+    "pyright>=1.1.0",
+    "types-PyYAML>=6.0.0",
+    "types-requests>=2.31.0",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.black]
+target-version = ['py310', 'py311', 'py312']
+line-length = 88
+include = '\.pyi?$'
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with -m 'not slow')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.pyright]
+include = ["src"]
+exclude = ["**/node_modules", "**/__pycache__", "**/.*"]
+defineConstant = { DEBUG = true }
+reportMissingImports = true
+reportMissingTypeStubs = false
+pythonVersion = "3.10"
+pythonPlatform = "Linux"
+executionEnvironments = [
+  { root = ".", pythonVersion = "3.10", pythonPlatform = "Linux", extraPaths = ["src"] }
+]

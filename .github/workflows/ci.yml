@@ -1,0 +1,176 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up UV
+      uses: astral-sh/setup-uv@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache UV dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/uv
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
+
+    - name: Install dependencies
+      run: |
+        uv pip install --system -e .[dev]
+
+    - name: Set up pre-commit cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pre-commit
+        key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pre-commit-
+
+    - name: Run pre-commit
+      run: |
+        pre-commit run --all-files
+
+    - name: Run tests with coverage
+      run: |
+        pytest --cov=dspy_gepa --cov-report=xml --cov-report=html
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  integration:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name != 'pull_request'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up UV
+      uses: astral-sh/setup-uv@v3
+      with:
+        python-version: "3.11"
+
+    - name: Cache UV dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/uv
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
+
+    - name: Install dependencies
+      run: |
+        uv pip install --system -e .[dev]
+
+    - name: Run integration tests
+      run: |
+        pytest -m integration -v
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+        WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [test, integration]
+    if: github.event_name == 'release'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up UV
+      uses: astral-sh/setup-uv@v3
+      with:
+        python-version: "3.11"
+
+    - name: Build package
+      run: |
+        uv pip install --system build
+        python -m build
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+
+  security:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up UV
+      uses: astral-sh/setup-uv@v3
+      with:
+        python-version: "3.11"
+
+    - name: Install security tools
+      run: |
+        uv pip install --system bandit safety
+
+    - name: Run Bandit security linter
+      run: |
+        bandit -r dspy_gepa/ -f json -o bandit-report.json
+
+    - name: Check dependencies for known security vulnerabilities
+      run: |
+        safety check --json --output safety-report.json
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+
+  docs:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up UV
+      uses: astral-sh/setup-uv@v3
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        uv pip install --system -e .[docs]
+
+    - name: Build documentation
+      run: |
+        mkdocs build
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./site

@@ -1,0 +1,65 @@
+# dspy-gepa configuration file
+# Copy this file to config.local.yaml and customize for your environment
+
+# LLM Configuration
+llm:
+  default_provider: "openai"
+  providers:
+    openai:
+      api_base: "https://api.openai.com/v1"
+      model: "gpt-4"
+      temperature: 0.7
+      max_tokens: 2048
+    anthropic:
+      api_base: "https://api.anthropic.com"
+      model: "claude-3-opus-20240229"
+      temperature: 0.7
+      max_tokens: 2048
+
+# Experiment Tracking
+experiment_tracking:
+  mlflow:
+    enabled: true
+    tracking_uri: "http://localhost:5000"
+    artifact_location: "./mlruns"
+  wandb:
+    enabled: true
+    project: "dspy-gepa-experiments"
+    entity: null  # Set to your wandb entity
+
+# Data Configuration
+data:
+  cache_dir: "./cache"
+  datasets_dir: "./datasets"
+  max_dataset_size: 10000
+
+# Evaluation Configuration
+evaluation:
+  default_metrics:
+    - "accuracy"
+    - "f1"
+    - "precision"
+    - "recall"
+  batch_size: 32
+  max_workers: 4
+
+# Agent Configuration
+agent:
+  default_max_retries: 3
+  default_timeout: 30
+  enable_caching: true
+  cache_ttl: 3600  # seconds
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "./logs/dspy_gepa.log"
+  max_file_size: "10MB"
+  backup_count: 5
+
+# Performance Configuration
+performance:
+  enable_profiling: false
+  profile_dir: "./profiles"
+  memory_limit: "8GB"
