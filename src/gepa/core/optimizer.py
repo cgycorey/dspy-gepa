@@ -201,7 +201,22 @@ class GeneticOptimizer:
         content2_lines = parent2.content.split('\n')
         
         # Randomly select cutting point
-        cut_point = random.randint(1, min(len(content1_lines), len(content2_lines)) - 1)
+        min_lines = min(len(content1_lines), len(content2_lines))
+        if min_lines <= 1:
+            # If content has only one line, use character-based crossover
+            content1_chars = parent1.content
+            content2_chars = parent2.content
+            min_chars = min(len(content1_chars), len(content2_chars))
+            if min_chars <= 1:
+                # If content is very short, just return parent1
+                child_content = parent1.content
+            else:
+                cut_point = random.randint(1, min_chars - 1)
+                child_content = content1_chars[:cut_point] + content2_chars[cut_point:]
+        else:
+            # Use line-based crossover for multi-line content
+            cut_point = random.randint(1, min_lines - 1)
+            child_content = '\n'.join(content1_lines[:cut_point] + content2_lines[cut_point:])
         
         # Combine content
         child_content = '\n'.join(content1_lines[:cut_point] + content2_lines[cut_point:])

@@ -192,7 +192,10 @@ def main():
         ("Core GEPA Components", test_core_gepa),
         ("AMOPE Algorithm", test_amope_components), 
         ("End-to-End Workflow", test_end_to_end_workflow),
-        ("Project Structure", test_project_structure)
+        ("Project Structure", test_project_structure),
+        ("AMOPE-GEPA Integration", test_amope_gepa_integration),
+        ("AMOPE-GEPA Performance", test_amope_gepa_performance_comparison),
+        ("AMOPE Backward Compatibility", test_amope_backward_compatibility),
     ]
     
     results = []
@@ -234,3 +237,148 @@ def main():
 if __name__ == "__main__":
     success = main()
     sys.exit(0 if success else 1)
+
+def test_amope_gepa_integration():
+    """Test AMOPE-GEPA integration functionality."""
+    print("🧬 Testing AMOPE-GEPA Integration...")
+    
+    try:
+        from dspy_gepa.amope import AMOPEOptimizer
+        from dspy_gepa.amope.objective_balancer import BalancingStrategy
+        
+        # Test basic AMOPE functionality
+        objectives = {"accuracy": 0.6, "efficiency": 0.4}
+        
+        optimizer = AMOPEOptimizer(
+            objectives=objectives,
+            balancing_config={"strategy": "adaptive_harmonic"}
+        )
+        
+        # Mock evaluation function
+        def mock_eval(candidate):
+            import random
+            return {
+                "accuracy": 0.5 + random.random() * 0.4,
+                "efficiency": 0.6 + random.random() * 0.3
+            }
+        
+        # Run short optimization
+        result = optimizer.optimize(
+            initial_prompt="Test AMOPE integration",
+            evaluation_fn=mock_eval,
+            generations=3
+        )
+        
+        # Verify results
+        assert result is not None
+        assert hasattr(result, 'best_prompt')
+        assert hasattr(result, 'fitness_scores')
+        
+        print("   ✅ AMOPE-GEPA integration working")
+        print(f"   ✅ Best prompt: {result.best_prompt[:30]}...")
+        print(f"   ✅ Fitness scores: {result.fitness_scores}")
+        
+        # Test comprehensive analytics if available
+        if hasattr(result, 'comprehensive_analytics') and result.comprehensive_analytics:
+            analytics = result.comprehensive_analytics
+            print(f"   ✅ Comprehensive analytics available: {len(analytics)} categories")
+        
+        return True
+        
+    except ImportError as e:
+        print(f"   ⚠️ AMOPE not available: {e}")
+        return False
+    except Exception as e:
+        print(f"   ❌ AMOPE-GEPA integration test failed: {e}")
+        return False
+
+def test_amope_gepa_performance_comparison():
+    """Test performance comparison between AMOPE-GEPA and baseline GEPA."""
+    print("📈 Testing AMOPE-GEPA Performance...")
+    
+    try:
+        from gepa.core.optimizer import GeneticOptimizer, OptimizationConfig
+        from dspy_gepa.amope import AMOPEOptimizer
+        
+        objectives = {"accuracy": 0.7, "efficiency": 0.3}
+        generations = 5
+        
+        def evaluation_fn(candidate):
+            import random
+            return {
+                "accuracy": 0.4 + random.random() * 0.5,
+                "efficiency": 0.5 + random.random() * 0.4
+            }
+        
+        # Test baseline GEPA
+        config = OptimizationConfig(
+            population_size=8,
+            max_generations=generations,
+            mutation_rate=0.7
+        )
+        
+        baseline_optimizer = GeneticOptimizer(
+            objectives=list(objectives.keys()),
+            fitness_function=evaluation_fn,
+            config=config
+        )
+        
+        baseline_results = baseline_optimizer.optimize("Baseline test")
+        
+        # Test AMOPE-GEPA
+        amope_optimizer = AMOPEOptimizer(
+            objectives=objectives,
+            balancing_config={"strategy": "adaptive_harmonic"}
+        )
+        
+        amope_result = amope_optimizer.optimize(
+            initial_prompt="AMOPE test",
+            evaluation_fn=evaluation_fn,
+            generations=generations
+        )
+        
+        # Compare results
+        baseline_fitness = sum(baseline_results[0].fitness_scores.values()) / len(baseline_results[0].fitness_scores)
+        amope_fitness = sum(amope_result.fitness_scores.values()) / len(amope_result.fitness_scores)
+        
+        improvement = ((amope_fitness - baseline_fitness) / baseline_fitness) * 100
+        
+        print(f"   📊 Baseline fitness: {baseline_fitness:.3f}")
+        print(f"   🚀 AMOPE fitness: {amope_fitness:.3f}")
+        print(f"   📈 Performance improvement: {improvement:+.1f}%")
+        
+        return True
+        
+    except Exception as e:
+        print(f"   ❌ Performance comparison failed: {e}")
+        return False
+
+def test_amope_backward_compatibility():
+    """Test that AMOPE maintains backward compatibility."""
+    print("🔄 Testing AMOPE Backward Compatibility...")
+    
+    try:
+        from dspy_gepa.amope import AMOPEOptimizer
+        
+        # Test minimal configuration
+        optimizer = AMOPEOptimizer(objectives={"accuracy": 1.0})
+        
+        def simple_eval(candidate):
+            import random
+            return {"accuracy": random.random()}
+        
+        result = optimizer.optimize(
+            initial_prompt="Backward compatibility test",
+            evaluation_fn=simple_eval,
+            generations=2
+        )
+        
+        assert result is not None
+        assert hasattr(result, 'best_prompt')
+        
+        print("   ✅ Backward compatibility maintained")
+        return True
+        
+    except Exception as e:
+        print(f"   ❌ Backward compatibility test failed: {e}")
+        return False

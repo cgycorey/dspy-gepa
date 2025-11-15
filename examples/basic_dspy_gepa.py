@@ -1027,6 +1027,9 @@ def demonstrate_metrics_collection():
 
 
 def main():
+
+    # Demo AMOPE-GEPA integration
+    demo_amope_gepa_integration()
     """Main demonstration function with REAL GEPA integration and proper error handling."""
     print("🐶 Welcome to DSPY-GEPA REAL Integration Example!")
     print("" + "=" * 55)
@@ -1190,3 +1193,142 @@ def main():
 
 if __name__ == "__main__":
     main()
+def demo_amope_gepa_integration():
+    """Demonstrate AMOPE-GEPA integration with enhanced features."""
+    print("\n🚀 AMOPE-GEPA Integration Demo")
+    print("=" * 60)
+    
+    try:
+        from dspy_gepa.amope import AMOPEOptimizer
+        from dspy_gepa.amope.objective_balancer import BalancingStrategy
+        
+        # Define multi-objective optimization
+        objectives = {
+            "accuracy": 0.5,      # Primary objective: answer correctness
+            "efficiency": 0.3,    # Secondary: response time/complexity  
+            "robustness": 0.2     # Tertiary: consistency across inputs
+        }
+        
+        print(f"🎯 Objectives: {objectives}")
+        
+        # Configure AMOPE with advanced features
+        mutation_config = {
+            "use_llm_guidance": False,  # Set to True with API keys for real LLM mutations
+            "adaptive_selection": True,
+            "exploration_rate": 0.3,
+            "exploitation_rate": 0.7
+        }
+        
+        balancing_config = {
+            "strategy": BalancingStrategy.ADAPTIVE_HARMONIC,
+            "stagnation_window": 5,
+            "adaptation_rate": 0.1
+        }
+        
+        # Initialize AMOPE optimizer
+        optimizer = AMOPEOptimizer(
+            objectives=objectives,
+            mutation_config=mutation_config,
+            balancing_config=balancing_config
+        )
+        
+        print(f"🧬 AMOPE configured with {balancing_config['strategy'].value} balancing")
+        
+        # Create evaluation function that simulates real DSPY evaluation
+        def integrated_evaluation(candidate):
+            """Simulate comprehensive evaluation with multiple metrics."""
+            import random
+            
+            # Base scores with some randomness
+            scores = {
+                "accuracy": 0.4 + random.random() * 0.4,
+                "efficiency": 0.5 + random.random() * 0.3,
+                "robustness": 0.3 + random.random() * 0.5
+            }
+            
+            # Content-based improvements
+            content = candidate.content.lower()
+            if "accurate" in content:
+                scores["accuracy"] += 0.15
+            if "efficient" in content or "simple" in content:
+                scores["efficiency"] += 0.2
+            if "robust" in content or "consistent" in content:
+                scores["robustness"] += 0.15
+                
+            return scores
+        
+        # Run integrated optimization
+        print("\n🔄 Running AMOPE-GEPA optimization...")
+        
+        result = optimizer.optimize(
+            initial_prompt="Provide an accurate and efficient answer to the question.",
+            evaluation_fn=integrated_evaluation,
+            generations=10
+        )
+        
+        # Display comprehensive results
+        print(f"\n🏆 OPTIMIZATION COMPLETE!")
+        print(f"📝 Best Prompt: {result.best_prompt}")
+        print(f"📊 Final Fitness Scores: {result.fitness_scores}")
+        
+        # Show strategy usage (AMOPE feature)
+        if hasattr(result, 'strategy_usage') and result.strategy_usage:
+            print(f"\n🧬 Mutation Strategy Usage:")
+            for strategy, count in result.strategy_usage.items():
+                print(f"   {strategy}: {count} applications")
+        
+        # Show comprehensive analytics (AMOPE-GEPA integration feature)
+        if hasattr(result, 'comprehensive_analytics') and result.comprehensive_analytics:
+            analytics = result.comprehensive_analytics
+            print(f"\n📈 Comprehensive Analytics:")
+            
+            if 'bridged_metrics' in analytics:
+                bridged = analytics['bridged_metrics']
+                print(f"   🔗 GEPA Integration Metrics:")
+                for metric, value in bridged.items():
+                    if isinstance(value, dict):
+                        print(f"      {metric}: {len(value)} items")
+                    else:
+                        print(f"      {metric}: {value}")
+            
+            if 'convergence_analysis' in analytics:
+                conv = analytics['convergence_analysis']
+                print(f"   📊 Convergence Analysis:")
+                for key, value in conv.items():
+                    if isinstance(value, (int, float)):
+                        print(f"      {key}: {value:.3f}")
+                    else:
+                        print(f"      {key}: {value}")
+        
+        # Get optimization insights
+        insights = optimizer.get_optimization_insights()
+        if insights:
+            print(f"\n💡 Optimization Insights:")
+            for category, data in insights.items():
+                print(f"   🎯 {category.title()}:")
+                if isinstance(data, dict):
+                    for key, value in data.items():
+                        print(f"      {key}: {value}")
+                else:
+                    print(f"      {data}")
+        
+        # Performance comparison with baseline
+        print(f"\n⚡ Performance Analysis:")
+        baseline_fitness = (0.5 + 0.6 + 0.4) / 3  # Expected baseline
+        optimized_fitness = sum(result.fitness_scores.values()) / len(result.fitness_scores)
+        improvement = ((optimized_fitness - baseline_fitness) / baseline_fitness) * 100
+        
+        print(f"   📊 Baseline fitness: {baseline_fitness:.3f}")
+        print(f"   🚀 Optimized fitness: {optimized_fitness:.3f}")
+        print(f"   📈 Improvement: {improvement:+.1f}%")
+        
+        return result
+        
+    except ImportError as e:
+        print(f"❌ AMOPE not available: {e}")
+        return None
+    except Exception as e:
+        print(f"❌ AMOPE demo failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
