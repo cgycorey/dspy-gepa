@@ -151,6 +151,11 @@ class OptimizationSummary:
     improvement: float
     
     @property
+    def best_objectives(self) -> dict:
+        """Alias for objectives_score for backward compatibility and intuition."""
+        return self.objectives_score
+
+    @property
     def improvement_percentage(self) -> float:
         """Improvement as percentage."""
         if self.initial_score == 0:

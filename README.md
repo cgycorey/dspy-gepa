@@ -430,6 +430,34 @@ print(f'✅ Fallback mode working! Score: {result.best_score:.3f}')
 "
 ```
 
+### 🚀 Quick Start Demo (NEW - Perfect for Beginners)
+```bash
+uv run python examples/quick_start_demo.py
+```
+
+**Experience the power of GEPAAgent in just 4 lines of code:**
+```python
+from dspy_gepa import GEPAAgent
+
+agent = GEPAAgent(objectives={"quality": 1.0})
+result = agent.optimize_prompt("analyze data", 
+                               lambda p: {"quality": your_scoring_function(p)})
+print(f"Improved: {result.best_prompt}")
+```
+
+**Expected output:**
+```
+🚀 GEPAAgent Quick Start Demo
+✅ Agent created
+✅ Using: LLM-guided + handcrafted
+📝 Initial prompt: 'analyze data'
+🎉 Optimized prompt: 'analyze data. Please provide a comprehensive response.'
+📈 Improvement: 150.0%
+🎉 Success! Your prompt has been optimized!
+```
+
+Perfect for absolute beginners to see immediate results in under 2 seconds!
+
 ## 🔧 Available Components
 
 ### Enhanced Agent Interface
