@@ -8,8 +8,14 @@ other relevant metrics to guide the evolutionary optimization process.
 from __future__ import annotations
 
 import time
-import psutil
 import threading
+
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
+    psutil = None
 from typing import Any, Dict, List, Optional, Callable, Union
 from datetime import datetime
 from dataclasses import dataclass, field
@@ -336,6 +342,11 @@ class MetricCollector:
     
     def _start_resource_monitoring(self) -> None:
         """Start background resource monitoring."""
+        if not PSUTIL_AVAILABLE:
+            # Fallback: no resource monitoring
+            self._monitoring_active = True
+            return
+        
         def monitor_resources():
             process = psutil.Process()
             
@@ -381,11 +392,12 @@ class MetricCollector:
         self._resource_data = ResourceUsage()
         
         # Reset process counters
-        try:
-            process = psutil.Process()
-            process.io_counters()  # This resets the counters
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass
+        if PSUTIL_AVAILABLE:
+            try:
+                process = psutil.Process()
+                process.io_counters()  # This resets the counters
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
     
     def _get_current_resource_usage(self) -> ResourceUsage:
         """Get current resource usage snapshot."""

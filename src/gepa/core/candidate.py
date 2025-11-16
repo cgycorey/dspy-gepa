@@ -10,10 +10,11 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ExecutionTrace(BaseModel):
@@ -26,10 +27,11 @@ class ExecutionTrace(BaseModel):
     error: Optional[str] = None
     metrics: Dict[str, Any] = Field(default_factory=dict)
     
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(
+        json_encoders={
             datetime: lambda v: v.isoformat()
         }
+    )
 
 
 class MutationRecord(BaseModel):
@@ -41,10 +43,11 @@ class MutationRecord(BaseModel):
     parent_id: Optional[str] = None
     changes_made: Dict[str, Any] = Field(default_factory=dict)
     
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(
+        json_encoders={
             datetime: lambda v: v.isoformat()
         }
+    )
 
 
 class Candidate(BaseModel):
@@ -67,7 +70,7 @@ class Candidate(BaseModel):
         last_modified: Timestamp when candidate was last modified
     """
     
-    id: str = Field(default_factory=lambda: f"candidate_{int(time.time())}_{hashlib.md5().hexdigest()[:8]}")
+    id: str = Field(default_factory=lambda: f"candidate_{int(time.time())}_{uuid.uuid4().hex[:8]}")
     content: str
     fitness_scores: Dict[str, float] = Field(default_factory=dict)
     generation: int = Field(default=0, ge=0)
@@ -85,11 +88,12 @@ class Candidate(BaseModel):
     domination_count: int = Field(default=0)
     dominated_solutions: List[str] = Field(default_factory=list)
     
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(
+        json_encoders={
             datetime: lambda v: v.isoformat()
-        }
-        validate_assignment = True
+        },
+        validate_assignment=True
+    )
     
     def __hash__(self) -> int:
         """Hash based on content and ID for use in sets."""
@@ -248,7 +252,7 @@ class Candidate(BaseModel):
         Returns:
             Dictionary representation of the candidate
         """
-        return self.dict()
+        return self.model_dump()
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> Candidate:
@@ -260,7 +264,7 @@ class Candidate(BaseModel):
         Returns:
             Candidate instance
         """
-        return cls.parse_obj(data)
+        return cls.model_validate(data)
     
     def copy(self) -> Candidate:
         """Create a deep copy of the candidate.
