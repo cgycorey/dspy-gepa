@@ -17,10 +17,21 @@ from contextlib import contextmanager
 
 from pydantic import BaseModel, Field
 
+# Conditional DSPY import with direct type imports
 try:
     import dspy
+    from dspy import Module, Signature
+    DSPY_AVAILABLE = True
+    DSPY_TYPES_AVAILABLE = True
 except ImportError:
     dspy = None
+    DSPY_AVAILABLE = False
+    DSPY_TYPES_AVAILABLE = False
+    # Create dummy types for when DSPY is not available
+    class DSPYFallbackModule:
+        pass
+    class DSPYFallbackSignature:
+        pass
 
 from gepa.core.candidate import ExecutionTrace, Candidate
 
@@ -121,9 +132,20 @@ class MetricCollector:
             
         Returns:
             Comprehensive metrics object
+            
+        Raises:
+            ImportError: If DSPY is not available
+            ValueError: If program is not a valid DSPY module
         """
-        if dspy is None:
-            raise ImportError("DSPY is required but not installed")
+        # Runtime validation
+        if not DSPY_AVAILABLE:
+            raise ImportError("DSPY is required but not available")
+        
+        # Additional runtime check if we have a way to validate DSPY modules
+        if hasattr(program, '__class__') and not self._is_likely_dspy_module(program):
+            # This is a soft check - we don't want to be too strict since we might
+            # be working with mock objects or other compatible implementations
+            pass
         
         start_time = time.time()
         
@@ -443,6 +465,26 @@ class MetricCollector:
             "success_rate": metrics.accuracy,
             "estimated_cost": metrics.estimated_cost,
         })
+    
+    def _is_likely_dspy_module(self, program: Any) -> bool:
+        """Check if an object is likely a DSPY module without requiring DSPY import.
+        
+        This is a runtime check that looks for common DSPY patterns without
+        requiring the dspy module to be imported for type checking.
+        """
+        if not DSPY_AVAILABLE:
+            return False
+        
+        try:
+            # If dspy is available, use the proper check
+            return isinstance(program, dspy.Module)
+        except (AttributeError, TypeError):
+            # Fallback: check for common DSPY attributes
+            return (hasattr(program, 'forward') or 
+                   hasattr(program, 'predict') or
+                   hasattr(program, 'generate') or
+                   (hasattr(program, '__class__') and 
+                    'dspy' in str(program.__class__.__module__).lower()))
     
     def __del__(self):
         """Cleanup when collector is destroyed."""

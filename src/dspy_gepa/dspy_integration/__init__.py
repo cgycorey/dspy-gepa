@@ -29,6 +29,19 @@ Example Usage:
 from .dspy_adapter import DSPYAdapter
 from .metric_collector import MetricCollector, DSPYMetrics
 
+# Try to import DSPY types for type hints
+try:
+    from dspy import Module, Signature
+    DSPY_TYPES_AVAILABLE = True
+except ImportError:
+    DSPY_TYPES_AVAILABLE = False
+    
+    # Create dummy types for when DSPY is not available
+    class DSPYFallbackModule:
+        pass
+    class DSPYFallbackSignature:
+        pass
+
 # TODO: Add program_parser when implemented
 # from .program_parser import ProgramParser, DSPYProgramInfo
 
@@ -36,6 +49,9 @@ __all__ = [
     "DSPYAdapter",
     "MetricCollector", 
     "DSPYMetrics",
+    "DSPYFallbackModule",  # DSPY Module type (dummy if not available)
+    "DSPYFallbackSignature",  # DSPY Signature type (dummy if not available)
+    "DSPY_TYPES_AVAILABLE",  # Flag to check if DSPY types are available
     # TODO: Add when implemented
     # "ProgramParser",
     # "DSPYProgramInfo",
