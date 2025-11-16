@@ -7,7 +7,7 @@ This example shows the simplest possible way to use GEPAAgent.
 Perfect for absolute beginners to see immediate results.
 
 Run with:
-  uv run python examples/quick_start_demo.py
+  uv run python examples/01_quick_start.py
 """
 
 import sys

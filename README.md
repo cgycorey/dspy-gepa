@@ -344,96 +344,44 @@ print(f"Generations completed: {result.generations_completed}")
 
 ## 🧪 Working Examples
 
-### Run the Enhanced Agent Example
+## 🚀 Quick Start Examples
+
+We've organized our examples from beginner to advanced. **Start with the first one and work your way down!**
+
+### 1. Absolute Beginners (2 minutes)
 ```bash
-cd dspy-test
-uv run python examples/basic_dspy_gepa.py
+uv run python examples/01_quick_start.py
+```
+See immediate results with just 4 lines of code!
+
+### 2. LLM Setup & Configuration
+```bash
+uv run python examples/02_llm_setup.py
+```
+Learn to configure OpenAI, Anthropic, and fallback modes.
+
+### 3. Basic Optimization
+```bash
+uv run python examples/03_basic_optimization.py
+```
+Master single and multi-objective optimization.
+
+### 4. Advanced Features
+```bash
+uv run python examples/04_advanced_features.py
+```
+Explore advanced patterns and production techniques.
+
+### 5. DSPY Integration (Optional)
+```bash
+# Install DSPY first (optional)
+uv add dspy
+
+# Run DSPY optimization example
+uv run python examples/dspy_integration/dspy_example.py
 ```
 
-### Run the LLM Integration Demo
-```bash
-uv run python -c "
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path.cwd() / 'src'))
-
-from dspy_gepa import GEPAAgent
-
-def demo_eval(prompt):
-    return {'performance': 0.5 + 0.1 * (hash(prompt) % 10) / 10}
-
-# Test auto-detection
-agent = GEPAAgent(objectives={'performance': 1.0})
-status = agent.get_llm_status()
-print(f'LLM Status: {status["status"]}')
-print(f'Provider: {status.get("provider", "None")}')
-
-result = agent.optimize_prompt('Test prompt', demo_eval, generations=10)
-print(f'✅ Demo completed! Best score: {result.best_score:.3f}')
-"
-```
-
-### Run Multi-Provider Demo
-```bash
-uv run python -c "
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path.cwd() / 'src'))
-
-from dspy_gepa import GEPAAgent
-
-def demo_eval(prompt):
-    return {'accuracy': 0.6 + 0.1 * (hash(prompt) % 10) / 10, 'efficiency': 0.7}
-
-# Test with different providers
-for provider in ['openai', 'anthropic']:
-    print(f'\n--- Testing {provider} ---')
-    try:
-        agent = GEPAAgent(
-            objectives={'accuracy': 0.7, 'efficiency': 0.3},
-            llm_config={'provider': provider, 'model': None}  # auto-select model
-        )
-        status = agent.get_llm_status()
-        print(f'Status: {status["status"]}')
-        if status['status'] == 'available':
-            result = agent.optimize_prompt('Test prompt', demo_eval, generations=5)
-            print(f'✅ {provider} working! Score: {result.best_score:.3f}')
-    except Exception as e:
-        print(f'❌ {provider} failed: {e}')
-"
-```
-
-### Run Fallback Mode Demo
-```bash
-uv run python -c "
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path.cwd() / 'src'))
-
-from dspy_gepa import GEPAAgent
-
-def demo_eval(prompt):
-    return {'performance': 0.5 + 0.1 * (hash(prompt) % 10) / 10}
-
-# Test fallback mode
-agent = GEPAAgent(
-    objectives={'performance': 1.0},
-    llm_config={'enabled': False}
-)
-
-status = agent.get_llm_status()
-print(f'LLM Status: {status["status"]}')
-print(f'Mutation Type: {status["mutation_type"]}')
-
-result = agent.optimize_prompt('Test prompt', demo_eval, generations=10)
-print(f'✅ Fallback mode working! Score: {result.best_score:.3f}')
-"
-```
-
-### 🚀 Quick Start Demo (NEW - Perfect for Beginners)
-```bash
-uv run python examples/quick_start_demo.py
-```
+📖 **See [examples/README.md](examples/README.md) for detailed guidance on choosing the right example!**
 
 **Experience the power of GEPAAgent in just 4 lines of code:**
 ```python
@@ -445,18 +393,12 @@ result = agent.optimize_prompt("analyze data",
 print(f"Improved: {result.best_prompt}")
 ```
 
-**Expected output:**
-```
-🚀 GEPAAgent Quick Start Demo
-✅ Agent created
-✅ Using: LLM-guided + handcrafted
-📝 Initial prompt: 'analyze data'
-🎉 Optimized prompt: 'analyze data. Please provide a comprehensive response.'
-📈 Improvement: 150.0%
-🎉 Success! Your prompt has been optimized!
+**Run the demo to see it in action:**
+```bash
+uv run python examples/01_quick_start.py
 ```
 
-Perfect for absolute beginners to see immediate results in under 2 seconds!
+Perfect for absolute beginners to see immediate results!
 
 ## 🔧 Available Components
 

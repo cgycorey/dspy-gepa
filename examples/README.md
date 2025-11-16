@@ -1,118 +1,137 @@
 # DSPY-GEPA Examples
 
-This directory contains examples showcasing the integration between DSPY and GEPA for evolutionary optimization of prompt programs.
+Welcome to the DSPY-GEPA examples! These are organized from beginner to advanced to help you get started quickly.
 
-## Files Overview
+## 🚀 Quick Start Path
 
-### `basic_dspy_gepa.py`
-The main demonstration file (583 lines) that shows:
-- Basic DSPY-GEPA workflow
-- Evolutionary optimization setup
-- Enhanced sample data creation
-- Comprehensive metrics collection
-- Robust error handling and demonstration mode
+### 1. Absolute Beginners
+Start here if you're new to prompt optimization:
 
-### `dspy_modules.py`
-DSPY module classes and signatures (83 lines):
-- `QuestionAnswering` signature for QA tasks
-- `SentimentClassification` signature for sentiment analysis
-- `SimpleQA` enhanced DSPY module with ChainOfThought
-- `SentimentAnalysis` enhanced module with confidence scoring
-
-### `language_model_setup.py`
-Robust language model configuration (270 lines):
-- `LMConfig` dataclass for model configuration
-- `setup_language_model()` function with multi-provider support
-- Enhanced mock LM for demonstration purposes
-- Automatic API key detection and fallback mechanisms
-
-## Phase 2 Implementation Features
-
-### Real Language Model Support
-- **OpenAI**: Automatic setup with `OPENAI_API_KEY`
-- **Anthropic**: Support for Claude models with `ANTHROPIC_API_KEY`
-- **Local Models**: Ollama/local LLM support via `LOCAL_MODEL_PATH`
-- **Enhanced MockLM**: Sophisticated fallback for demo environments
-
-### Environment Variables
 ```bash
-# OpenAI Configuration
-export OPENAI_API_KEY="your-openai-key"
-export OPENAI_MODEL="gpt-3.5-turbo"
-export OPENAI_TEMPERATURE="0.7"
-export OPENAI_MAX_TOKENS="1024"
-
-# Anthropic Configuration
-export ANTHROPIC_API_KEY="your-anthropic-key"
-export ANTHROPIC_MODEL="claude-3-sonnet-20240229"
-export ANTHROPIC_TEMPERATURE="0.7"
-export ANTHROPIC_MAX_TOKENS="1024"
-
-# Local Model Configuration
-export LOCAL_MODEL_PATH="/path/to/model"
-export LOCAL_MODEL_NAME="llama2"
-export LOCAL_API_BASE="http://localhost:11434"
+uv run python examples/01_quick_start.py
 ```
 
-### Enhanced DSPY Modules
-- **Proper Signatures**: Type-safe input/output fields
-- **ChainOfThought Integration**: Built-in reasoning and explanation
-- **Confidence Scoring**: Sentiment analysis with confidence intervals
-- **Error Handling**: Graceful fallbacks and validation
+**What you'll learn:**
+- Create a GEPAAgent in 1 line
+- Run basic optimization in 2 lines
+- See immediate results
 
-### Improved Sample Data
-- **Realistic Examples**: 5 diverse QA questions with context
-- **Varied Difficulty**: Easy, medium, and hard complexity levels
-- **Rich Sentiment Data**: 8 sentiment examples with different text types
-- **Comprehensive Ground Truth**: Keywords, confidence thresholds, and expected outputs
+### 2. LLM Setup & Configuration
+Learn how to configure different LLM providers:
 
-### Enhanced Evaluation Metrics
-- **Accuracy Analysis**: Keyword and semantic matching
-- **Performance Metrics**: Execution time, consistency, diversity
-- **Quality Scores**: Confidence quality and complexity assessment
-- **Detailed Logging**: Comprehensive result tracking
-
-## Running the Examples
-
-### With Real APIs
 ```bash
-# Set your API key(s)
-export OPENAI_API_KEY="your-key-here"
-# OR
-export ANTHROPIC_API_KEY="your-key-here"
-
-# Run the demonstration
-python3 examples/basic_dspy_gepa.py
+uv run python examples/02_llm_setup.py
 ```
 
-### In Demonstration Mode
+**What you'll learn:**
+- Auto-detect LLM providers
+- Manual configuration
+- Environment variable setup
+- Fallback mode
+
+### 3. Basic Optimization
+Master fundamental optimization techniques:
+
 ```bash
-# No API keys needed - runs with enhanced mock LM
-python3 examples/basic_dspy_gepa.py
+uv run python examples/03_basic_optimization.py
 ```
 
-### Dependencies
-- DSPY (for full functionality)
-- GEPA framework components
-- Python 3.8+
+**What you'll learn:**
+- Single-objective optimization
+- Multi-objective optimization
+- Writing evaluation functions
+- Comparing different approaches
 
-Note: The examples will work without DSPY installed, but with limited functionality using mock models.
+### 4. Advanced Features
+Explore advanced capabilities and patterns:
 
-## Architecture
+```bash
+uv run python examples/04_advanced_features.py
+```
 
-The Phase 2 implementation follows these design principles:
+**What you'll learn:**
+- Configuration inspection
+- Error handling
+- Performance monitoring
+- Advanced usage patterns
 
-1. **Modular Design**: Separate concerns into focused modules
-2. **Robust Fallbacks**: Work with or without external dependencies
-3. **Type Safety**: Comprehensive type hints and validation
-4. **Production Ready**: Error handling, logging, and configuration
-5. **Demo Friendly**: Enhanced behavior even in demonstration environments
+## 🔧 DSPY Integration
 
-## Next Steps (Phase 3)
+For users working with DSPY programs:
 
-The next phase will focus on:
-- Advanced evolutionary optimization algorithms
-- Multi-objective optimization improvements
-- Performance profiling and analysis
-- Advanced mutation strategies
-- Real-world use case examples
+```bash
+# Install DSPY first (optional)
+uv add dspy
+
+# Run DSPY integration example
+uv run python examples/dspy_integration/dspy_example.py
+```
+
+## 📁 Example Structure
+
+```
+examples/
+├── 01_quick_start.py          # 🚀 4-line usage example
+├── 02_llm_setup.py            # 🔧 LLM configuration demo
+├── 03_basic_optimization.py   # 📈 Optimization fundamentals
+├── 04_advanced_features.py    # 🎯 Advanced patterns & features
+├── dspy_integration/          # 🧠 DSPY program optimization
+│   ├── README.md
+│   └── dspy_example.py
+└── README.md                  # 📚 This file
+```
+
+## 💡 Choosing the Right Example
+
+| Your Goal | Start With | Why |
+|-----------|------------|-----|
+| "I just want to see it work" | `01_quick_start.py` | Instant results in 2 seconds |
+| "I need to set up my LLM" | `02_llm_setup.py` | Complete LLM configuration guide |
+| "I want to understand optimization" | `03_basic_optimization.py` | Clear fundamentals explained |
+| "I'm building a real application" | `04_advanced_features.py` | Production-ready patterns |
+| "I work with DSPY programs" | `dspy_integration/dspy_example.py` | DSPY-specific optimization |
+
+## 🎯 Learning Path
+
+1. **Start** with `01_quick_start.py` to see immediate results
+2. **Configure** your LLM with `02_llm_setup.py`
+3. **Learn** optimization concepts with `03_basic_optimization.py`
+4. **Master** advanced features with `04_advanced_features.py`
+5. **Specialize** with DSPY integration if needed
+
+## 🛠️ Prerequisites
+
+```bash
+# Install dependencies
+uv sync
+
+# Optional: Set up LLM API keys
+export OPENAI_API_KEY="your-key"
+export ANTHROPIC_API_KEY="your-key"
+```
+
+## 🐛 Troubleshooting
+
+**Import errors?**
+```bash
+uv sync --reinstall
+```
+
+**LLM not working?**
+- Check `02_llm_setup.py` for configuration help
+- All examples work in fallback mode without LLM
+
+**DSPY errors?**
+- DSPY is optional - examples include mock classes
+- Install with `uv add dspy` for full functionality
+
+## 🎉 Next Steps
+
+After running the examples:
+
+1. **Read the main README.md** for detailed documentation
+2. **Check the configuration guide** for production setup
+3. **Explore the source code** in `src/dspy_gepa/`
+4. **Run the tests** with `uv run pytest`
+
+Happy optimizing! 🚀
