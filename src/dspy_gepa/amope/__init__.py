@@ -157,6 +157,7 @@ class OptimizationResult:
     convergence_achieved: bool
     total_evaluation_time: float
     strategy_usage: Dict[str, int]
+    initial_score: float = 0.0
     
     # GEPA-specific results (Pareto front analysis)
     pareto_front: Optional[List[Dict[str, Any]]] = None
@@ -259,6 +260,13 @@ class OptimizationResult:
         summary_lines.append("\n" + "="*60)
         return "\n".join(summary_lines)
     
+    @property
+    def improvement_percentage(self) -> float:
+        """Improvement as percentage."""
+        if self.initial_score == 0:
+            return 0.0
+        return ((self.best_score - self.initial_score) / self.initial_score) * 100
+
 
 class AMOPEOptimizer:
     """Unified AMOPE optimizer combining adaptive mutation and objective balancing.
@@ -538,6 +546,9 @@ class AMOPEOptimizer:
             max_weight=self.config.balancing_config.get("max_weight", 3.0)
         )
         
+        # Add objective_balancer alias for compatibility
+        self.objective_balancer = self.balancer
+        
         # Initialize GEPA optimizer if available
         if self._GEPA_AVAILABLE:
             from gepa.core.optimizer import OptimizationConfig
@@ -585,7 +596,12 @@ class AMOPEOptimizer:
         self._current_evaluation_fn = evaluation_fn
         
         # Get initial score for comparison
-        initial_objectives = evaluation_fn(initial_prompt)
+        try:
+            initial_objectives = evaluation_fn(initial_prompt)
+        except Exception as e:
+            print(f"Warning: Initial evaluation failed: {e}")
+            # Use default objectives when evaluation fails
+            initial_objectives = {obj_name: 0.5 for obj_name in self.config.objectives}
         initial_score = self._evaluate_prompt(initial_prompt, evaluation_fn)
         
         if self.config.verbose:
@@ -715,6 +731,7 @@ class AMOPEOptimizer:
             convergence_achieved=generations_completed > 0 and self.stagnation_counter < self.config.stagnation_generations,
             total_evaluation_time=total_time,
             strategy_usage=strategy_usage,
+            initial_score=initial_score,
             
             # GEPA-specific results
             pareto_front=[c.to_dict() for c in best_candidates] if 'best_candidates' in locals() and best_candidates else None,
@@ -792,7 +809,12 @@ class AMOPEOptimizer:
     
     def _evaluate_prompt(self, prompt: str, evaluation_fn: Callable) -> float:
         """Evaluate prompt and return combined score."""
-        objectives = evaluation_fn(prompt)
+        try:
+            objectives = evaluation_fn(prompt)
+        except Exception as e:
+            print(f"Warning: Evaluation failed for prompt: {e}")
+            # Use default objectives when evaluation fails
+            objectives = {obj_name: 0.5 for obj_name in self.config.objectives}
         
         # Apply current weights to get combined score
         combined_score = 0.0

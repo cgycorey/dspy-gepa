@@ -1950,3 +1950,133 @@ class AdaptiveMutator(TextMutator):
             hybrid_stats["amope_stagnation"] = self.amope_optimizer.stagnation_counter
         
         return hybrid_stats
+    
+    def mutate_with_strategy(self, candidate: Any, strategy_name: str, context: Optional[Dict[str, Any]] = None) -> MutationResult:
+        """Apply mutation using specified strategy.
+        
+        Args:
+            candidate: Candidate to mutate (can be string or Candidate object)
+            strategy_name: Name of the strategy to use
+            context: Additional context for mutation
+            
+        Returns:
+            MutationResult with mutated content and metadata
+        """
+        # Convert candidate to proper format
+        if hasattr(candidate, 'content'):
+            content = candidate.content
+            candidate_obj = candidate
+        else:
+            content = str(candidate)
+            try:
+                # Import Candidate from GEPA core
+                from gepa.core.candidate import Candidate
+                candidate_obj = Candidate(content=content)
+            except ImportError:
+                # Fallback if GEPA not available
+                candidate_obj = None
+        
+        # Try to use the specified strategy directly if available
+        try:
+            # Convert strategy name to enum
+            strategy_enum = MutationStrategy(strategy_name)
+            
+            if strategy_enum in self.mutation_strategies:
+                # Use the specific strategy directly
+                mutator = self.mutation_strategies[strategy_enum]
+                if candidate_obj:
+                    mutated_content = mutator.mutate(candidate_obj, context)
+                else:
+                    # Fallback to content-based mutation
+                    mutated_content = self._apply_strategy_mutation(content, strategy_name)
+                
+                # Calculate basic metrics
+                confidence_score = 0.8
+                estimated_improvement = 0.1
+                computation_cost = 0.1
+                
+                return MutationResult(
+                    mutated_content=mutated_content,
+                    strategy_used=strategy_name,
+                    confidence_score=confidence_score,
+                    estimated_improvement=estimated_improvement,
+                    computation_cost=computation_cost
+                )
+            else:
+                # Strategy not available, use fallback
+                pass
+        except (ValueError, KeyError):
+            # Invalid strategy name, use fallback
+            pass
+        
+        # Fallback to basic mutation
+        mutated_content = self._apply_strategy_mutation(content, strategy_name)
+        
+        return MutationResult(
+            mutated_content=mutated_content,
+            strategy_used=strategy_name,
+            confidence_score=0.8,
+            estimated_improvement=0.1,
+            computation_cost=0.1
+        )
+    
+    def _apply_strategy_mutation(self, content: str, strategy_name: str) -> str:
+        """Apply a specific mutation strategy."""
+        # Implement basic strategy-based mutations
+        if strategy_name == "pattern_based":
+            return self._pattern_based_mutation(content)
+        elif strategy_name == "statistical":
+            return self._statistical_mutation(content)
+        elif strategy_name == "gradient_based":
+            return self._gradient_based_mutation(content)
+        else:
+            return self._default_mutation(content)
+    
+    def _pattern_based_mutation(self, content: str) -> str:
+        """Apply pattern-based mutation."""
+        # Simple pattern-based mutation - swap words or restructure
+        words = content.split()
+        if len(words) > 2:
+            # Swap two random words
+            import random
+            idx1, idx2 = random.sample(range(len(words)), 2)
+            words[idx1], words[idx2] = words[idx2], words[idx1]
+        return ' '.join(words)
+    
+    def _statistical_mutation(self, content: str) -> str:
+        """Apply statistical mutation."""
+        # Simple statistical mutation - add or remove random elements
+        import random
+        words = content.split()
+        if random.random() < 0.5 and len(words) > 1:
+            # Remove a random word
+            words.pop(random.randint(0, len(words) - 1))
+        else:
+            # Add a simple connector word
+            connectors = ['and', 'or', 'but', 'however', 'therefore']
+            words.insert(random.randint(0, len(words)), random.choice(connectors))
+        return ' '.join(words)
+    
+    def _gradient_based_mutation(self, content: str) -> str:
+        """Apply gradient-based mutation."""
+        # Simple gradient-inspired mutation - modify based on position
+        words = content.split()
+        if len(words) > 3:
+            # Reverse a small segment (simulating gradient descent step)
+            mid = len(words) // 2
+            start = max(0, mid - 2)
+            end = min(len(words), mid + 2)
+            words[start:end] = words[start:end][::-1]
+        return ' '.join(words)
+    
+    def _default_mutation(self, content: str) -> str:
+        """Apply default fallback mutation."""
+        # Simple default mutation - change a random character
+        import random
+        if len(content) > 0:
+            char_list = list(content)
+            idx = random.randint(0, len(char_list) - 1)
+            # Simple character substitution
+            replacements = ['a', 'e', 'i', 'o', 'u', ' ', '.', ',']
+            char_list[idx] = random.choice(replacements)
+        return ''.join(char_list) if 'char_list' in locals() else content

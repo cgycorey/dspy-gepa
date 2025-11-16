@@ -146,11 +146,11 @@ class TestAMOPEGEPAIntegration:
             # Verify integration results
             assert result is not None, "Should return optimization result"
             assert hasattr(result, 'best_prompt'), "Result should have best_prompt"
-            assert hasattr(result, 'fitness_scores'), "Result should have fitness_scores"
+            assert hasattr(result, 'best_objectives'), "Result should have best_objectives"
             
             print("✅ AMOPE successfully calls GEPA's GeneticOptimizer")
             print(f"✅ Best prompt: {result.best_prompt[:50]}...")
-            print(f"✅ Fitness scores: {result.fitness_scores}")
+            print(f"✅ Best objectives: {result.best_objectives}")
     
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Required imports not available")
     def test_objective_balancer_gepa_integration(self, mock_evaluation_function):
@@ -242,7 +242,7 @@ class TestAMOPEGEPAIntegration:
         # Verify it still works
         assert result is not None, "Should work with minimal config"
         assert hasattr(result, 'best_prompt'), "Should have best_prompt"
-        assert hasattr(result, 'fitness_scores'), "Should have fitness_scores"
+        assert hasattr(result, 'best_objectives'), "Should have best_objectives"
         
         print("✅ Backward compatibility maintained")
         print(f"✅ Basic optimization works: {result.best_prompt[:30]}...")
@@ -279,7 +279,7 @@ class TestAMOPEGEPAIntegration:
         assert amope_result is not None, "Should return result"
         
         # Compare fitness improvements
-        amope_avg = sum(amope_result.fitness_scores.values()) / len(amope_result.fitness_scores)
+        amope_avg = sum(amope_result.best_objectives.values()) / len(amope_result.best_objectives)
         fitness_improvement = (amope_avg - baseline_avg) / baseline_avg * 100
         
         print(f"📊 Performance Comparison:")
@@ -369,7 +369,7 @@ class TestIntegrationEdgeCases:
         )
         
         assert result is not None, "Should work with single objective"
-        assert "accuracy" in result.fitness_scores, "Should have accuracy score"
+        assert "accuracy" in result.best_objectives, "Should have accuracy score"
         print("✅ Single objective optimization works")
     
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Required imports not available")
@@ -403,7 +403,7 @@ class TestIntegrationEdgeCases:
         )
         
         assert result is not None, "Should work with many objectives"
-        assert len(result.fitness_scores) == 5, "Should have all 5 objectives"
+        assert len(result.best_objectives) == 5, "Should have all 5 objectives"
         print("✅ Multi-objective optimization works")
     
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Required imports not available")

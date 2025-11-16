@@ -241,3 +241,18 @@ secrets.yaml
 htmlcov/
 .pytest_cache/
 test-results/
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Development verification scripts
+*verification*.py
+test_*.py
+comprehensive_*demo*.py
+
+# Temporary documentation
+DRAFT_*.md
+TEMP_*.md
+*_SUMMARY.md
