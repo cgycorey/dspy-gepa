@@ -32,7 +32,7 @@ from dataclasses import dataclass, asdict
 from unittest.mock import Mock, MagicMock
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 # Import core GEPA components
 try:
