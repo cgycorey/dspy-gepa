@@ -11,10 +11,18 @@ Core Components:
 - TextMutator: LLM-driven mutation strategies
 """
 
-from gepa.core.candidate import Candidate, ExecutionTrace, MutationRecord
-from gepa.core.mutator import TextMutator, MutationStrategy, LLMReflectionMutator
-from gepa.core.optimizer import GeneticOptimizer, OptimizationConfig
-from gepa.core.selector import ParetoSelector
+# Import local GEPA components with explicit relative imports
+try:
+    from .core.candidate import Candidate, ExecutionTrace, MutationRecord
+    from .core.mutator import TextMutator, MutationStrategy, LLMReflectionMutator
+    from .core.optimizer import GeneticOptimizer, OptimizationConfig
+    from .core.selector import ParetoSelector
+except ImportError:
+    # Fallback for when running as installed package
+    from gepa.core.candidate import Candidate, ExecutionTrace, MutationRecord
+    from gepa.core.mutator import TextMutator, MutationStrategy, LLMReflectionMutator
+    from gepa.core.optimizer import GeneticOptimizer, OptimizationConfig
+    from gepa.core.selector import ParetoSelector
 
 __version__ = "0.1.0"
 __author__ = "GEPA Development Team"
