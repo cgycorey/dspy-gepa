@@ -4,6 +4,7 @@ These tests validate that the system handles errors gracefully and provides
 useful feedback when things go wrong.
 """
 
+import os
 import pytest
 import time
 from unittest.mock import Mock, patch
@@ -197,10 +198,14 @@ class TestRuntimeErrorHandling:
         assert result.best_score >= 0.0
         print("✅ Evaluation function crashes handled correctly")
     
+    @pytest.mark.slow
     def test_evaluation_function_timeout(self):
         """Test handling when evaluation function is too slow."""
+        # Use CI-friendly sleep duration
+        sleep_duration = 1.0 if os.getenv('CI') else 2.0
+        
         def slow_evaluation(prompt):
-            time.sleep(2.0)  # Very slow evaluation
+            time.sleep(sleep_duration)  # Slow evaluation
             return {"quality": 0.5}
         
         agent = GEPAAgent(

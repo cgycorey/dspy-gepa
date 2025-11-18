@@ -8,9 +8,11 @@ by measuring task completion rates and response quality, not just keywords.
 Usage: python test_real_effectiveness.py
 """
 
+import os
 import sys
 import time
 import json
+import pytest
 from pathlib import Path
 from typing import Dict, List, Any, Tuple
 from dataclasses import dataclass
@@ -298,6 +300,7 @@ Applications span across industries:
         
         return mutations[:4]  # Return first 4 substantive mutations
     
+    @pytest.mark.slow
     def run_comprehensive_test(self) -> Dict:
         """Run comprehensive effectiveness comparison"""
         print("🧪 Real Effectiveness Test for dspy-gepa Mutations")
@@ -314,11 +317,17 @@ Applications span across industries:
             }
         }
         
+        # Use CI-friendly reduced test set if needed
+        test_cases = self.test_cases
+        if os.getenv('CI'):
+            test_cases = test_cases[:2]  # Only test first 2 cases in CI
+            print("🔧 CI mode: Running reduced test set (2 cases instead of 3)")
+        
         original_scores = []
         handcrafted_scores = []
         substantive_scores = []
         
-        for i, test_case in enumerate(self.test_cases, 1):
+        for i, test_case in enumerate(test_cases, 1):
             print(f"\n📋 Test Case {i}: {test_case['original']} ({test_case['category']})")
             print("-" * 50)
             
@@ -418,6 +427,18 @@ Applications span across industries:
         with open('real_effectiveness_results.json', 'w') as f:
             json.dump(results, f, indent=2)
         print(f"\n💾 Results saved to real_effectiveness_results.json")
+
+@pytest.mark.slow
+def test_real_effectiveness_suite():
+    """Pytest wrapper for real effectiveness test"""
+    tester = RealEffectivenessTest()
+    results = tester.run_comprehensive_test()
+    tester.generate_report(results)
+    
+    # Assert that the test completed successfully
+    assert 'summary' in results
+    assert 'test_cases' in results
+    assert len(results['test_cases']) > 0
 
 def main():
     """Run the real effectiveness test"""

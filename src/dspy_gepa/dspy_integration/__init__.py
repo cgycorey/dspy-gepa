@@ -42,8 +42,7 @@ except ImportError:
     class DSPYFallbackSignature:
         pass
 
-# TODO: Add program_parser when implemented
-# from .program_parser import ProgramParser, DSPYProgramInfo
+from .program_parser import ProgramParser, DSPYProgramInfo
 
 __all__ = [
     "DSPYAdapter",
@@ -52,9 +51,8 @@ __all__ = [
     "DSPYFallbackModule",  # DSPY Module type (dummy if not available)
     "DSPYFallbackSignature",  # DSPY Signature type (dummy if not available)
     "DSPY_TYPES_AVAILABLE",  # Flag to check if DSPY types are available
-    # TODO: Add when implemented
-    # "ProgramParser",
-    # "DSPYProgramInfo",
+    "ProgramParser",
+    "DSPYProgramInfo",
 ]
 
 __version__ = "0.1.0"

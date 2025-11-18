@@ -174,6 +174,25 @@ wheels = [
 ]
 
 [[package]]
+name = "anthropic"
+version = "0.73.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "distro" },
+    { name = "docstring-parser" },
+    { name = "httpx" },
+    { name = "jiter" },
+    { name = "pydantic" },
+    { name = "sniffio" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f0/07/f550112c3f5299d02f06580577f602e8a112b1988ad7c98ac1a8f7292d7e/anthropic-0.73.0.tar.gz", hash = "sha256:30f0d7d86390165f86af6ca7c3041f8720bb2e1b0e12a44525c8edfdbd2c5239", size = 425168, upload-time = "2025-11-14T18:47:52.635Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/15/b1/5d4d3f649e151e58dc938cf19c4d0cd19fca9a986879f30fea08a7b17138/anthropic-0.73.0-py3-none-any.whl", hash = "sha256:0d56cd8b3ca3fea9c9b5162868bdfd053fbc189b8b56d4290bd2d427b56db769", size = 367839, upload-time = "2025-11-14T18:47:51.195Z" },
+]
+
+[[package]]
 name = "anyio"
 version = "4.11.0"
 source = { registry = "https://pypi.org/simple" }
@@ -582,6 +601,15 @@ wheels = [
 ]
 
 [[package]]
+name = "docstring-parser"
+version = "0.17.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b2/9d/c3b43da9515bd270df0f80548d9944e389870713cc1fe2b8fb35fe2bcefd/docstring_parser-0.17.0.tar.gz", hash = "sha256:583de4a309722b3315439bb31d64ba3eebada841f2e2cee23b99df001434c912", size = 27442, upload-time = "2025-07-21T07:35:01.868Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/55/e2/2537ebcff11c1ee1ff17d8d0b6f4db75873e3b0fb32c2d4a2ee31ecb310a/docstring_parser-0.17.0-py3-none-any.whl", hash = "sha256:cf2569abd23dce8099b300f9b4fa8191e9582dda731fd533daf54c4551658708", size = 36896, upload-time = "2025-07-21T07:35:00.684Z" },
+]
+
+[[package]]
 name = "dspy"
 version = "2.6.27"
 source = { registry = "https://pypi.org/simple" }
@@ -620,20 +648,25 @@ name = "dspy-gepa"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "dspy" },
     { name = "gepa" },
     { name = "litellm" },
     { name = "psutil" },
+    { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "requests" },
     { name = "tqdm" },
 ]
 
 [package.optional-dependencies]
+anthropic = [
+    { name = "anthropic" },
+]
 dev = [
+    { name = "anthropic" },
     { name = "black" },
     { name = "isort" },
     { name = "mypy" },
+    { name = "openai" },
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -641,6 +674,22 @@ dev = [
     { name = "ruff" },
     { name = "types-pyyaml" },
     { name = "types-requests" },
+]
+dspy-full = [
+    { name = "anthropic" },
+    { name = "dspy" },
+    { name = "openai" },
+]
+gepa-only = [
+    { name = "anthropic" },
+    { name = "openai" },
+]
+llm-providers = [
+    { name = "anthropic" },
+    { name = "openai" },
+]
+openai = [
+    { name = "openai" },
 ]
 
 [package.dev-dependencies]
@@ -659,13 +708,20 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "anthropic", marker = "extra == 'anthropic'", specifier = ">=0.25.0" },
     { name = "black", marker = "extra == 'dev'", specifier = ">=24.0.0" },
-    { name = "dspy", specifier = ">=2.4.0" },
+    { name = "dspy", marker = "extra == 'dspy-full'", specifier = ">=2.4.0" },
+    { name = "dspy-gepa", extras = ["llm-providers"], marker = "extra == 'dev'" },
+    { name = "dspy-gepa", extras = ["llm-providers"], marker = "extra == 'dspy-full'" },
+    { name = "dspy-gepa", extras = ["llm-providers"], marker = "extra == 'gepa-only'" },
+    { name = "dspy-gepa", extras = ["openai", "anthropic"], marker = "extra == 'llm-providers'" },
     { name = "gepa", git = "https://github.com/gepa-ai/gepa.git" },
     { name = "isort", marker = "extra == 'dev'", specifier = ">=5.13.0" },
     { name = "litellm", specifier = ">=1.40.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8.0" },
+    { name = "openai", marker = "extra == 'openai'", specifier = ">=1.0.0" },
     { name = "psutil", specifier = ">=7.1.3" },
+    { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23.0" },
@@ -677,7 +733,7 @@ requires-dist = [
     { name = "types-pyyaml", marker = "extra == 'dev'", specifier = ">=6.0.0" },
     { name = "types-requests", marker = "extra == 'dev'", specifier = ">=2.31.0" },
 ]
-provides-extras = ["dev"]
+provides-extras = ["openai", "anthropic", "llm-providers", "dspy-full", "gepa-only", "dev"]
 
 [package.metadata.requires-dev]
 dev = [

@@ -241,7 +241,7 @@ def performance_monitor():
 def pytest_configure(config):
     """Configure custom pytest markers."""
     config.addinivalue_line(
-        "markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')"
+        "markers", 'slow: marks tests as slow (deselect with \'-m "not slow"\')'
     )
     config.addinivalue_line(
         "markers", "integration: marks tests as integration tests"
@@ -252,6 +252,24 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "performance: marks tests as performance benchmarks"
     )
+    
+    # Set CI environment detection
+    import os
+    if not os.getenv('CI'):
+        # Default settings for local development
+        os.environ['PYTEST_CURRENT_TEST'] = '1'  # Flag for test environment
+
+
+def pytest_collection_modifyitems(config, items):
+    """Modify test collection to add markers based on environment."""
+    import os
+    
+    # In CI, automatically skip slow tests unless explicitly requested
+    if os.getenv('CI') and 'slow' not in config.option.markexpr:
+        skip_slow = pytest.mark.skip(reason="Skipping slow tests in CI")
+        for item in items:
+            if "slow" in item.keywords:
+                item.add_marker(skip_slow)
 
 # Helper functions for tests
 def create_test_candidate(content: str = "test content", fitness: Dict = None) -> "Candidate":
@@ -274,6 +292,27 @@ def assert_performance_within_baseline(metrics: Dict, baseline: Dict):
                 assert value <= limit, f"{metric} {value} exceeds limit {limit}"
             elif metric.startswith("min"):
                 assert value >= limit, f"{metric} {value} below minimum {limit}"
+
+
+def get_ci_friendly_config(base_config: Dict) -> Dict:
+    """Get CI-friendly configuration based on environment."""
+    import os
+    
+    if os.getenv('CI'):
+        # Reduce resource usage in CI
+        return {
+            **base_config,
+            'max_generations': max(1, base_config.get('max_generations', 3) // 3),
+            'population_size': max(1, base_config.get('population_size', 5) // 2),
+            'timeout_seconds': base_config.get('timeout_seconds', 30) // 2,
+        }
+    return base_config.copy()
+
+
+def is_ci_environment() -> bool:
+    """Check if we're running in CI environment."""
+    import os
+    return bool(os.getenv('CI') or os.getenv('GITHUB_ACTIONS') or os.getenv('GITLAB_CI'))
 
 # Mock DSPY imports patch
 @pytest.fixture(autouse=True)

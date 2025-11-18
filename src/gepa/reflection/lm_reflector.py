@@ -20,6 +20,30 @@ from pydantic import BaseModel, Field
 
 from ..core.candidate import Candidate, ExecutionTrace
 
+# Import dependency handler for graceful optional dependency management
+try:
+    from dspy_gepa.utils.dependency_handler import (
+        DependencyError, 
+        require_openai, 
+        require_anthropic,
+        is_openai_available,
+        is_anthropic_available,
+        create_mock_provider
+    )
+except ImportError:
+    # Fallback for development environment
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+    from dspy_gepa.utils.dependency_handler import (
+        DependencyError, 
+        require_openai, 
+        require_anthropic,
+        is_openai_available,
+        is_anthropic_available,
+        create_mock_provider
+    )
+
 
 class ReflectionConfig(BaseModel):
     """Configuration for LLM reflection."""
@@ -89,21 +113,51 @@ class LLMProvider(ABC):
 class OpenAIProvider(LLMProvider):
     """OpenAI provider for LLM reflection."""
     
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, use_mock: bool = False):
         """Initialize OpenAI provider.
         
         Args:
             api_key: OpenAI API key (if None, uses environment variable)
+            use_mock: If True, use mock provider instead of real OpenAI
         """
+        # Always check if we should use mock
+        if use_mock or not is_openai_available():
+            if not is_openai_available():
+                print("⚠️ OpenAI library not available. Using mock provider.")
+                print("   Install with: pip install 'dspy-gepa[openai]' or pip install openai")
+            self.client = create_mock_provider("openai")
+            self.provider_name = "openai-mock"
+            return
+        
+        # Try to initialize real OpenAI client
         try:
-            import openai
+            openai = require_openai()
+            # Check if API key is available
+            import os
+            if not api_key and not os.getenv('OPENAI_API_KEY'):
+                print("⚠️ No OpenAI API key found. Using mock provider.")
+                print("   Set OPENAI_API_KEY environment variable or pass api_key parameter")
+                self.client = create_mock_provider("openai")
+                self.provider_name = "openai-mock"
+                return
+                
             self.client = openai.AsyncOpenAI(api_key=api_key)
             self.provider_name = "openai"
-        except ImportError:
-            raise ImportError("OpenAI library not installed. Install with: pip install openai")
+        except DependencyError as e:
+            print(f"⚠️ {e}")
+            self.client = create_mock_provider("openai")
+            self.provider_name = "openai-mock"
+        except Exception as e:
+            print(f"⚠️ Failed to initialize OpenAI client: {e}. Using mock provider.")
+            self.client = create_mock_provider("openai")
+            self.provider_name = "openai-mock"
     
     async def generate_reflection(self, prompt: str, config: ReflectionConfig) -> str:
         """Generate reflection using OpenAI."""
+        if self.provider_name == "openai-mock":
+            # Use mock provider
+            return await self.client.generate_reflection(prompt, config)
+        
         try:
             response = await self.client.chat.completions.create(
                 model=config.model,
@@ -128,21 +182,51 @@ class OpenAIProvider(LLMProvider):
 class AnthropicProvider(LLMProvider):
     """Anthropic provider for LLM reflection."""
     
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, use_mock: bool = False):
         """Initialize Anthropic provider.
         
         Args:
             api_key: Anthropic API key (if None, uses environment variable)
+            use_mock: If True, use mock provider instead of real Anthropic
         """
+        # Always check if we should use mock
+        if use_mock or not is_anthropic_available():
+            if not is_anthropic_available():
+                print("⚠️ Anthropic library not available. Using mock provider.")
+                print("   Install with: pip install 'dspy-gepa[anthropic]' or pip install anthropic")
+            self.client = create_mock_provider("anthropic")
+            self.provider_name = "anthropic-mock"
+            return
+        
+        # Try to initialize real Anthropic client
         try:
-            import anthropic
+            anthropic = require_anthropic()
+            # Check if API key is available
+            import os
+            if not api_key and not os.getenv('ANTHROPIC_API_KEY'):
+                print("⚠️ No Anthropic API key found. Using mock provider.")
+                print("   Set ANTHROPIC_API_KEY environment variable or pass api_key parameter")
+                self.client = create_mock_provider("anthropic")
+                self.provider_name = "anthropic-mock"
+                return
+                
             self.client = anthropic.AsyncAnthropic(api_key=api_key)
             self.provider_name = "anthropic"
-        except ImportError:
-            raise ImportError("Anthropic library not installed. Install with: pip install anthropic")
+        except DependencyError as e:
+            print(f"⚠️ {e}")
+            self.client = create_mock_provider("anthropic")
+            self.provider_name = "anthropic-mock"
+        except Exception as e:
+            print(f"⚠️ Failed to initialize Anthropic client: {e}. Using mock provider.")
+            self.client = create_mock_provider("anthropic")
+            self.provider_name = "anthropic-mock"
     
     async def generate_reflection(self, prompt: str, config: ReflectionConfig) -> str:
         """Generate reflection using Anthropic."""
+        if self.provider_name == "anthropic-mock":
+            # Use mock provider
+            return await self.client.generate_reflection(prompt, config)
+        
         try:
             response = await self.client.messages.create(
                 model=config.model,
@@ -220,9 +304,30 @@ class LMReflector:
         
         provider_class = provider_map.get(self.config.provider)
         if not provider_class:
-            raise ValueError(f"Unsupported provider: {self.config.provider}")
+            available_providers = list(provider_map.keys())
+            raise ValueError(
+                f"Unsupported provider: {self.config.provider}. "
+                f"Available providers: {available_providers}"
+            )
         
-        return provider_class()
+        try:
+            return provider_class()
+        except ImportError as e:
+            # Provide helpful guidance for missing dependencies
+            if self.config.provider == "openai":
+                raise ImportError(
+                    f"Cannot initialize OpenAI provider: {e}. "
+                    "Install with: pip install 'dspy-gepa[openai]' or pip install openai"
+                ) from e
+            elif self.config.provider == "anthropic":
+                raise ImportError(
+                    f"Cannot initialize Anthropic provider: {e}. "
+                    "Install with: pip install 'dspy-gepa[anthropic]' or pip install anthropic"
+                ) from e
+            else:
+                raise e
+        except Exception as e:
+            raise RuntimeError(f"Failed to initialize {self.config.provider} provider: {e}") from e
     
     async def reflect_on_candidate(self, candidate: Candidate,
                                  context: Optional[Dict[str, Any]] = None) -> ReflectionResult:

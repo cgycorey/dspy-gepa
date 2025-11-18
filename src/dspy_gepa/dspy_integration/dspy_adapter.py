@@ -103,9 +103,9 @@ class DSPYAdapter:
             "accuracy", "efficiency", "cost", "complexity"
         ]
         
-        if not DSPY_AVAILABLE:
-            raise ImportError("DSPY is required but not installed. "
-                            "Install with: pip install dspy")
+        self.dspy_available = DSPY_AVAILABLE
+        if not self.dspy_available:
+            print("⚠️ DSPY not available - adapter running in limited mode")
     
     def dspy_to_candidate(self, 
                           program: "dspy.Module", 

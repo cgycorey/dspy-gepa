@@ -139,14 +139,15 @@ class ProgramParser:
         self.include_complexity_analysis = include_complexity_analysis
         self.include_optimization_suggestions = include_optimization_suggestions
         
-        if dspy is None:
-            raise ImportError("DSPY is required but not installed")
+        self.dspy_available = dspy is not None
+        if not self.dspy_available:
+            print("⚠️ DSPY not available - running in limited mode")
     
-    def parse_program(self, program: "dspy.Module") -> DSPYProgramInfo:
+    def parse_program(self, program: Any) -> DSPYProgramInfo:
         """Parse and analyze a DSPY program.
         
         Args:
-            program: DSPY program to parse
+            program: DSPY program to parse (or mock program if DSPY not available)
             
         Returns:
             Comprehensive program information

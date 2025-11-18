@@ -161,12 +161,30 @@ from .amope import (
 
 # DSPY Integration imports - these require DSPY dependency
 try:
-    from .dspy_integration import (
-        DSPYAdapter,
-        MetricCollector,
-        DSPYMetrics,
-    )
-    _DSPY_AVAILABLE = True
+    from .utils.dependency_handler import is_dspy_available
+    
+    if is_dspy_available():
+        from .dspy_integration import (
+            DSPYAdapter,
+            MetricCollector,
+            DSPYMetrics,
+        )
+        _DSPY_AVAILABLE = True
+    else:
+        _DSPY_AVAILABLE = False
+        # Define placeholder types for type checking
+        DSPYAdapter = Any
+        MetricCollector = Any
+        DSPYMetrics = Any
+        
+        # Provide helpful message on first import
+        import warnings
+        warnings.warn(
+            "DSPy is not installed. DSPy integration features will not be available. "
+            "Install with: pip install 'dspy-gepa[dspy-full]' or pip install dspy>=2.4.0",
+            ImportWarning,
+            stacklevel=2
+        )
 except ImportError:
     _DSPY_AVAILABLE = False
     # Define placeholder types for type checking

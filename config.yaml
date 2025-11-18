@@ -3,52 +3,70 @@
 
 # LLM Configuration
 llm:
-  default_provider: "openai"
+  default_provider: "mock"  # Changed to mock for out-of-box functionality
+  fallback_provider: "openai"
   providers:
+    mock:
+      # Mock provider for immediate testing without API keys
+      enabled: true
+      response_delay: 0.1  # seconds to simulate API latency
     openai:
+      enabled: false  # Disabled by default
       api_base: "https://api.openai.com/v1"
-      model: "gpt-4"
+      model: "gpt-3.5-turbo"  # Changed to cheaper model
       temperature: 0.7
-      max_tokens: 2048
+      max_tokens: 1024  # Reduced for cost efficiency
+      api_key: null  # Set via OPENAI_API_KEY environment variable
     anthropic:
+      enabled: false  # Disabled by default
       api_base: "https://api.anthropic.com"
-      model: "claude-3-opus-20240229"
+      model: "claude-3-haiku-20240307"  # Changed to cheaper model
       temperature: 0.7
-      max_tokens: 2048
+      max_tokens: 1024  # Reduced for cost efficiency
+      api_key: null  # Set via ANTHROPIC_API_KEY environment variable
 
-# Experiment Tracking
+# Experiment Tracking - ALL DISABLED BY DEFAULT
 experiment_tracking:
+  enabled: false  # Master switch for all tracking
   mlflow:
-    enabled: true
+    enabled: false  # Explicitly disabled
     tracking_uri: "http://localhost:5000"
     artifact_location: "./mlruns"
+    auto_start_server: false  # Don't auto-start MLflow server
   wandb:
-    enabled: true
+    enabled: false  # Explicitly disabled
     project: "dspy-gepa-experiments"
-    entity: null  # Set to your wandb entity
+    entity: null
+  # Local file-based tracking (always available)
+  local:
+    enabled: true  # Simple CSV/JSON tracking
+    output_dir: "./experiments"
+    format: "json"  # Options: json, csv, both
 
 # Data Configuration
 data:
   cache_dir: "./cache"
   datasets_dir: "./datasets"
-  max_dataset_size: 10000
+  max_dataset_size: 1000  # Reduced for faster demos
+  auto_download: false  # Don't auto-download datasets
+  use_synthetic_data: true  # Use synthetic data for demos
 
 # Evaluation Configuration
 evaluation:
   default_metrics:
-    - "accuracy"
-    - "f1"
-    - "precision"
-    - "recall"
-  batch_size: 32
-  max_workers: 4
+    - "accuracy"  # Simplified for demos
+  batch_size: 8  # Reduced for faster execution
+  max_workers: 2  # Reduced to avoid resource issues
+  timeout: 30  # Add timeout to prevent hanging
+  use_mock_evaluation: true  # Enable mock evaluation for testing
 
 # Agent Configuration
 agent:
-  default_max_retries: 3
-  default_timeout: 30
+  default_max_retries: 2  # Reduced for faster demos
+  default_timeout: 15  # Reduced timeout
   enable_caching: true
-  cache_ttl: 3600  # seconds
+  cache_ttl: 1800  # Reduced to 30 minutes
+  max_cache_size: 100  # Limit cache size
 
 # Logging Configuration
 logging:
@@ -57,9 +75,43 @@ logging:
   file: "./logs/dspy_gepa.log"
   max_file_size: "10MB"
   backup_count: 5
+  console_output: true  # Always show console output
+  file_output: false  # Disable file output by default
 
 # Performance Configuration
 performance:
   enable_profiling: false
   profile_dir: "./profiles"
-  memory_limit: "8GB"
+  memory_limit: "4GB"  # Reduced for better compatibility
+  max_execution_time: 300  # 5 minutes max execution
+
+# Optimization Configuration (NEW)
+optimization:
+  max_generations: 5  # Reduced for demos
+  population_size: 4  # Reduced for demos
+  mutation_rate: 0.3
+  crossover_rate: 0.7
+  elitism_ratio: 0.2
+  convergence_threshold: 0.01
+  max_no_improvement: 3
+
+# DSPY Integration Configuration (NEW)
+dspy:
+  auto_install: false  # Don't auto-install dependencies
+  fallback_to_mock: true  # Use mock when DSPY not available
+  max_retries: 2
+  timeout: 10
+
+# Error Handling Configuration (NEW)
+error_handling:
+  graceful_degradation: true  # Fall back to simpler implementations
+  continue_on_error: true  # Continue execution when possible
+  log_errors: true
+  raise_on_critical: false  # Don't raise exceptions for non-critical errors
+
+# Validation Configuration (NEW)
+validation:
+  validate_config_on_load: true
+  validate_dependencies: true
+  skip_optional_validation: true
+  warn_on_missing_optional: true

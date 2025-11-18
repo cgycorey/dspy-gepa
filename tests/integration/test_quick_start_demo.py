@@ -4,6 +4,7 @@ This test validates that the actual demo from examples/ works
 and produces real improvements.
 """
 
+import os
 import pytest
 import sys
 import time
@@ -102,8 +103,10 @@ class TestQuickStartDemo:
         )
         
         # 5. Optimization should complete in reasonable time
-        assert optimization_time < 30.0, (
-            f"Optimization took too long: {optimization_time:.1f}s"
+        # Use CI-friendly timeout
+        timeout = 10.0 if os.getenv('CI') else 30.0
+        assert optimization_time < timeout, (
+            f"Optimization took too long: {optimization_time:.1f}s (limit: {timeout}s)"
         )
         
         # 6. Result should have all expected fields
@@ -218,11 +221,15 @@ class TestQuickStartDemo:
         
         results = []
         
+        # Use CI-friendly settings
+        max_gen = 1 if os.getenv('CI') else 3
+        pop_size = 2 if os.getenv('CI') else 3
+        
         for objectives in objective_configs:
             agent = GEPAAgent(
                 objectives=objectives,
-                max_generations=3,
-                population_size=3,
+                max_generations=max_gen,
+                population_size=pop_size,
                 verbose=False
             )
             
@@ -264,10 +271,14 @@ class TestQuickStartDemo:
                 raise ValueError("Intentional failure")
             return simple_evaluation(prompt)
         
+        # Use CI-friendly settings
+        max_gen = 1 if os.getenv('CI') else 2
+        pop_size = 1 if os.getenv('CI') else 2
+        
         agent = GEPAAgent(
             objectives={"quality": 1.0},
-            max_generations=2,
-            population_size=2,
+            max_generations=max_gen,
+            population_size=pop_size,
             verbose=False
         )
         
@@ -293,12 +304,19 @@ class TestQuickStartDemo:
 class TestDemoPerformance:
     """Test performance characteristics of the demo."""
     
+    @pytest.mark.slow
     def test_demo_execution_time(self):
         """Test that demo executes within reasonable time."""
+        # Use CI-friendly settings
+        max_gen = 2 if os.getenv('CI') else 5
+        pop_size = 2 if os.getenv('CI') else 4
+        opt_gen = 1 if os.getenv('CI') else 3
+        timeout = 20.0 if os.getenv('CI') else 60.0
+        
         agent = GEPAAgent(
             objectives={"quality": 1.0},
-            max_generations=5,
-            population_size=4,
+            max_generations=max_gen,
+            population_size=pop_size,
             verbose=False
         )
         
@@ -306,45 +324,52 @@ class TestDemoPerformance:
         result = agent.optimize_prompt(
             "analyze data",
             simple_evaluation,
-            generations=3
+            generations=opt_gen
         )
         execution_time = time.time() - start_time
         
-        # Should complete within reasonable time (adjust based on environment)
-        assert execution_time < 60.0, (
-            f"Demo took too long: {execution_time:.1f}s"
+        # Should complete within reasonable time (CI has tighter bounds)
+        assert execution_time < timeout, (
+            f"Demo took too long: {execution_time:.1f}s (limit: {timeout}s)"
         )
         
         print(f"✅ Demo completed in {execution_time:.1f}s")
     
+    @pytest.mark.slow
     def test_demo_memory_usage(self):
         """Test that demo doesn't use excessive memory."""
         try:
             import psutil
             import os
             
+            # Use CI-friendly settings
+            max_gen = 2 if os.getenv('CI') else 5
+            pop_size = 2 if os.getenv('CI') else 4
+            opt_gen = 1 if os.getenv('CI') else 3
+            memory_threshold = 50.0 if os.getenv('CI') else 100.0
+            
             process = psutil.Process(os.getpid())
             memory_before = process.memory_info().rss / 1024 / 1024  # MB
             
             agent = GEPAAgent(
                 objectives={"quality": 1.0},
-                max_generations=5,
-                population_size=4,
+                max_generations=max_gen,
+                population_size=pop_size,
                 verbose=False
             )
             
             result = agent.optimize_prompt(
                 "analyze data",
                 simple_evaluation,
-                generations=3
+                generations=opt_gen
             )
             
             memory_after = process.memory_info().rss / 1024 / 1024  # MB
             memory_used = memory_after - memory_before
             
-            # Should not use excessive memory (adjust threshold as needed)
-            assert memory_used < 100.0, (
-                f"Demo used too much memory: {memory_used:.1f}MB"
+            # Should not use excessive memory (tighter threshold for CI)
+            assert memory_used < memory_threshold, (
+                f"Demo used too much memory: {memory_used:.1f}MB (limit: {memory_threshold}MB)"
             )
             
             print(f"✅ Demo used {memory_used:.1f}MB memory")

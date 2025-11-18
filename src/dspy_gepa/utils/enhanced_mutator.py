@@ -33,7 +33,7 @@ class EnhancedMutator:
         """Initialize domain-specific mutation patterns"""
         return {
             'coding': {
-                'keywords': ['function', 'def', 'class', 'algorithm', 'implement', 'code', 'program'],
+                'keywords': ['function', 'def', 'class', 'implement', 'code', 'program', 'write code', 'debug'],
                 'enhancements': {
                     'factorial': [
                         'Include input validation for negative numbers',
@@ -56,7 +56,7 @@ class EnhancedMutator:
                 }
             },
             'explanation': {
-                'keywords': ['explain', 'what is', 'define', 'describe', 'overview'],
+                'keywords': ['explain', 'what is', 'define', 'describe', 'overview', 'provide an overview'],
                 'enhancements': {
                     'machine learning': [
                         'Include key concepts and terminology',
@@ -73,7 +73,7 @@ class EnhancedMutator:
                 }
             },
             'analysis': {
-                'keywords': ['analyze', 'compare', 'evaluate', 'assess', 'review'],
+                'keywords': ['analyze', 'evaluate', 'assess', 'review', 'examine', 'critique'],
                 'enhancements': {
                     'general': [
                         'Use structured framework for analysis',
@@ -90,7 +90,7 @@ class EnhancedMutator:
         return [
             {
                 'name': 'add_specificity',
-                'condition': lambda p: len(p.split()) < 5,
+                'condition': lambda p: len(p.split()) <= 4 and not any(word in p.lower() for word in ['comprehensive', 'detailed', 'thorough', 'complete']),
                 'action': lambda p: f"{p} Be specific and include concrete examples."
             },
             {
@@ -132,9 +132,32 @@ class EnhancedMutator:
         ]
     
     def detect_domain(self, prompt: str) -> str:
-        """Detect the primary domain of the prompt"""
+        """Detect the primary domain of the prompt with priority-based matching"""
         prompt_lower = prompt.lower()
         
+        # Priority-based detection with most specific patterns first
+        
+        # 1. Explanation domain - highest priority for conceptual topics
+        explanation_topics = [
+            'artificial intelligence', 'machine learning', 'neural network', 
+            'quantum computing', 'photosynthesis', 'neural networks'
+        ]
+        explanation_indicators = ['explain', 'what is', 'define', 'describe', 'overview']
+        
+        if any(topic in prompt_lower for topic in explanation_topics) and any(indicator in prompt_lower for indicator in explanation_indicators):
+            return 'explanation'
+        
+        # 2. Analysis domain - medium priority
+        analysis_indicators = ['compare', 'analyze', 'evaluate', 'assess', 'review', 'examine', 'critique']
+        if any(indicator in prompt_lower for indicator in analysis_indicators):
+            return 'analysis'
+        
+        # 3. Coding domain - specific programming keywords
+        coding_keywords = ['function', 'def ', 'class ', 'implement', 'write a', 'create a', 'code', 'program', 'debug']
+        if any(keyword in prompt_lower for keyword in coding_keywords):
+            return 'coding'
+        
+        # 4. Fallback to scoring system
         domain_scores = {}
         for domain, config in self.domain_patterns.items():
             score = sum(1 for keyword in config['keywords'] if keyword in prompt_lower)

@@ -29,8 +29,21 @@ Example usage:
 """
 
 from .lm_reflector import LMReflector
-from .trace_analyzer import TraceAnalyzer
-from .feedback_generator import FeedbackGenerator
+
+# Optional components - import gracefully if available
+try:
+    from .trace_analyzer import TraceAnalyzer
+    _TRACE_ANALYZER_AVAILABLE = True
+except ImportError:
+    _TRACE_ANALYZER_AVAILABLE = False
+    TraceAnalyzer = None
+
+try:
+    from .feedback_generator import FeedbackGenerator
+    _FEEDBACK_GENERATOR_AVAILABLE = True
+except ImportError:
+    _FEEDBACK_GENERATOR_AVAILABLE = False
+    FeedbackGenerator = None
 
 __all__ = [
     "LMReflector",

@@ -284,17 +284,6 @@ class LLMConfigTester:
             
             temp_config_path = self.create_temp_config(custom_config)
             
-            # Load the manual config by temporarily modifying the config loading path
-            # We need to mock the config loading to use our temp file
-            original_possible_paths = []
-            
-            # Create a custom load function that uses our temp config
-            def mock_load_llm_config(config_path=None):
-                return load_llm_config(temp_config_path)
-            
-            with patch('dspy_gepa.utils.config.load_llm_config', side_effect=mock_load_llm_config):
-                config = load_llm_config()
-            
             # Reset and load with our temp config directly
             reset_config()
             config = load_llm_config(temp_config_path)
@@ -421,18 +410,6 @@ class LLMConfigTester:
             )
             
             # Test 2: Malformed YAML config
-            malformed_config = {
-                "llm": {
-                    "default_provider": "openai",
-                    "providers": {
-                        # Missing closing quote - this would be invalid YAML
-                        "openai": {
-                            "model": "gpt-4"
-                        }
-                    }
-                }
-            }
-            
             # Create malformed YAML file (intentionally broken)
             temp_malformed = tempfile.mktemp(suffix=".yaml")
             with open(temp_malformed, 'w') as f:
