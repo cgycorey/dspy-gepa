@@ -255,3 +255,4 @@ comprehensive_*demo*.py
 DRAFT_*.md
 TEMP_*.md
 *_SUMMARY.mdtests/integration/disabled/
+test_outputs

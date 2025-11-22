@@ -1,58 +1,34 @@
-"""DSPY-GEPA Integration Layer.
+"""DSPy integration layer for multi-objective GEPA optimization.
 
-This package provides the integration between DSPY programs and the GEPA (Genetic-Pareto Algorithm)
-framework. It enables evolutionary optimization of DSPY programs by converting them to GEPA
-candidates and applying genetic operators for prompt engineering and program optimization.
+This package provides seamless integration between DSPy modules and the
+multi-objective GEPA optimization framework, enabling automatic metric
+conversion, signature-aware optimization, and enhanced DSPy workflows.
 
-Main Components:
-- DSPYAdapter: Main adapter for converting DSPY programs to/from GEPA candidates
-- MetricCollector: Performance metrics collection and tracking
-- ProgramParser: Parse and analyze DSPY programs for optimization
+Components:
+- MultiObjectiveOptimizer: Main optimizer for DSPy modules
+- MetricConverter: Automatic conversion of DSPy metrics
+- SignatureAnalyzer: Signature-aware optimization strategies
 
 Example Usage:
-    from dspy_gepa.dspy_integration import DSPYAdapter, MetricCollector
+    ```python
+    from dspy_gepa.dspy_integration import MultiObjectiveOptimizer
+    from dspy_gepa.core import AccuracyMetric, EfficiencyMetric
     
-    # Create adapter
-    adapter = DSPYAdapter()
-    
-    # Convert DSPY program to GEPA candidate
-    candidate = adapter.dspy_to_candidate(program)
-    
-    # Convert back to DSPY program
-    program = adapter.candidate_to_dspy(candidate)
-    
-    # Collect metrics
-    collector = MetricCollector()
-    metrics = collector.evaluate_program(program, dataset)
+    optimizer = MultiObjectiveOptimizer()
+    result = optimizer.optimize_module(
+        module=module,
+        trainset=train_data,
+        objectives=[AccuracyMetric(), EfficiencyMetric()]
+    )
+    ```
 """
 
-from .dspy_adapter import DSPYAdapter
-from .metric_collector import MetricCollector, DSPYMetrics
-
-# Try to import DSPY types for type hints
-try:
-    from dspy import Module, Signature
-    DSPY_TYPES_AVAILABLE = True
-except ImportError:
-    DSPY_TYPES_AVAILABLE = False
-    
-    # Create dummy types for when DSPY is not available
-    class DSPYFallbackModule:
-        pass
-    class DSPYFallbackSignature:
-        pass
-
-from .program_parser import ProgramParser, DSPYProgramInfo
+from .multi_objective_optimizer import MultiObjectiveOptimizer
+from .metric_converter import DSPyMetricConverter
+from .signature_analyzer import DSPySignatureAnalyzer
 
 __all__ = [
-    "DSPYAdapter",
-    "MetricCollector", 
-    "DSPYMetrics",
-    "DSPYFallbackModule",  # DSPY Module type (dummy if not available)
-    "DSPYFallbackSignature",  # DSPY Signature type (dummy if not available)
-    "DSPY_TYPES_AVAILABLE",  # Flag to check if DSPY types are available
-    "ProgramParser",
-    "DSPYProgramInfo",
+    "MultiObjectiveOptimizer",
+    "DSPyMetricConverter", 
+    "DSPySignatureAnalyzer"
 ]
-
-__version__ = "0.1.0"

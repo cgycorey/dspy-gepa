@@ -1,329 +1,278 @@
-"""Shared pytest fixtures and configuration for DSPY-GEPA tests."""
+"""Shared pytest fixtures and configuration for dspy-gepa tests."""
 
-import os
-import sys
-import json
-import time
-import random
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Generator
-from unittest.mock import Mock, MagicMock, patch
+from __future__ import annotations
+
 import pytest
+import tempfile
+import shutil
+from pathlib import Path
+from typing import Generator, Any, Dict
+from unittest.mock import Mock, patch
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+from tests.fixtures.test_data import (
+    create_sample_evaluation_results,
+    create_sample_optimization_state,
+    create_progress_data,
+    SAMPLE_CHECKPOINT_STATE,
+    RESOURCE_LIMITS,
+    CONVERGENCE_CONFIGS,
+    STOPPING_CONFIGS,
+    MockProcess
+)
 
-# Mock dependencies that might not be available
-MOCK_DSPY = Mock()
-MOCK_DSPY.Module = Mock
-MOCK_DSPY.ChainOfThought = Mock
-MOCK_DSPY.Prediction = Mock
-MOCK_DSPY.settings = Mock()
-MOCK_DSPY.configure = Mock()
 
-# Test data fixtures
-@pytest.fixture
-def sample_qa_data():
-    """Sample question-answering data for testing."""
-    return [
-        {"question": "What is machine learning?", "expected_answer": "AI systems that learn from data"},
-        {"question": "What is Python?", "expected_answer": "A programming language"},
-        {"question": "What is genetic programming?", "expected_answer": "Evolutionary algorithm technique"},
-        {"question": "What is neural network?", "expected_answer": "Computational model inspired by brain"},
-        {"question": "What is deep learning?", "expected_answer": "Subset of machine learning"},
-    ]
+@pytest.fixture(scope="session")
+def temp_dir() -> Generator[Path, None, None]:
+    """Create a temporary directory for test files."""
+    temp_path = Path(tempfile.mkdtemp())
+    try:
+        yield temp_path
+    finally:
+        shutil.rmtree(temp_path, ignore_errors=True)
 
-@pytest.fixture
-def sample_sentiment_data():
-    """Sample sentiment analysis data for testing."""
-    return [
-        {"text": "I love this product!", "expected_sentiment": "positive"},
-        {"text": "This is terrible.", "expected_sentiment": "negative"},
-        {"text": "It's okay, nothing special.", "expected_sentiment": "neutral"},
-        {"text": "Amazing service!", "expected_sentiment": "positive"},
-        {"text": "Worst experience ever.", "expected_sentiment": "negative"},
-    ]
 
 @pytest.fixture
-def mock_llm_responses():
-    """Mock LLM responses for testing."""
-    return {
-        "question": [
-            "Machine learning is a subset of artificial intelligence that enables systems to learn and improve from experience.",
-            "Python is a high-level programming language known for its simplicity and versatility.",
-            "Genetic programming is an evolutionary algorithm-based methodology inspired by biological evolution.",
-        ],
-        "sentiment": ["positive", "negative", "neutral", "positive", "negative"],
-        "default": "This is a mock response for testing purposes."
-    }
+def sample_evaluation_results():
+    """Provide sample evaluation results for testing."""
+    return create_sample_evaluation_results(10)
+
 
 @pytest.fixture
-def mock_dspy_module():
-    """Create a mock DSPY module for testing."""
-    class MockDSPYModule:
-        def __init__(self, module_type="qa"):
-            self.module_type = module_type
-            self.name = f"Mock{module_type.title()}Module"
-            
-        def forward(self, **kwargs):
-            if self.module_type == "qa":
-                return MOCK_DSPY.Prediction(answer="Mock answer to the question")
-            elif self.module_type == "sentiment":
-                return MOCK_DSPY.Prediction(sentiment="positive")
-            else:
-                return MOCK_DSPY.Prediction(output="Mock output")
-                
-        def __call__(self, **kwargs):
-            return self.forward(**kwargs)
+def sample_optimization_state():
+    """Provide sample optimization state for testing."""
+    return create_sample_optimization_state()
+
+
+@pytest.fixture
+def sample_progress_data():
+    """Provide sample progress data for testing."""
+    return create_progress_data(20)
+
+
+@pytest.fixture
+def checkpoint_state():
+    """Provide sample checkpoint state for testing."""
+    return SAMPLE_CHECKPOINT_STATE.copy()
+
+
+@pytest.fixture(params=["conservative", "aggressive", "minimal"])
+def resource_limits(request):
+    """Parametrized resource limits fixture."""
+    return RESOURCE_LIMITS[request.param]
+
+
+@pytest.fixture
+def temp_checkpoint_dir(temp_dir):
+    """Create a temporary checkpoint directory."""
+    checkpoint_dir = temp_dir / "checkpoints"
+    checkpoint_dir.mkdir(exist_ok=True)
+    return checkpoint_dir
+
+
+@pytest.fixture
+def temp_log_dir(temp_dir):
+    """Create a temporary log directory."""
+    log_dir = temp_dir / "logs"
+    log_dir.mkdir(exist_ok=True)
+    return log_dir
+
+
+@pytest.fixture
+def mock_psutil_process():
+    """Mock psutil.Process for testing without actual process monitoring."""
+    return MockProcess()
+
+
+@pytest.fixture
+def mock_psutil():
+    """Mock psutil module for testing."""
+    with patch('src.dspy_gepa.core.monitoring.psutil') as mock_psutil:
+        mock_psutil.Process.return_value = MockProcess()
+        mock_psutil.NoSuchProcess = Exception
+        mock_psutil.AccessDenied = Exception
+        yield mock_psutil
+
+
+@pytest.fixture
+def mock_matplotlib():
+    """Mock matplotlib for testing without actual plotting."""
+    with patch('src.dspy_gepa.core.visualization.MATPLOTLIB_AVAILABLE', False):
+        with patch('src.dspy_gepa.core.visualization.plt') as mock_plt:
+            mock_plt.subplots.return_value = (Mock(), Mock())
+            yield mock_plt
+
+
+@pytest.fixture
+def mock_plotly():
+    """Mock plotly for testing without actual interactive plots."""
+    with patch('src.dspy_gepa.core.visualization.PLOTLY_AVAILABLE', False):
+        with patch('src.dspy_gepa.core.visualization.go') as mock_go:
+            yield mock_go
+
+
+@pytest.fixture
+def mock_numpy():
+    """Mock numpy for testing without actual numerical computations."""
+    with patch('src.dspy_gepa.core.analysis.np') as mock_np:
+        # Setup numpy mock with common methods
+        mock_np.arange = lambda x: list(range(x))
+        mock_np.array = lambda x: x
+        mock_np.polyfit = lambda x, y, deg: [0.001, 0.5]  # Return slope, intercept
+        yield mock_np
+
+
+@pytest.fixture
+def convergence_configs():
+    """Provide convergence detector configurations."""
+    return CONVERGENCE_CONFIGS
+
+
+@pytest.fixture
+def stopping_configs():
+    """Provide optimal stopping estimator configurations."""
+    return STOPPING_CONFIGS
+
+
+@pytest.fixture(params=CONVERGENCE_CONFIGS.keys())
+def convergence_config(request):
+    """Parametrized convergence configuration fixture."""
+    return CONVERGENCE_CONFIGS[request.param]
+
+
+@pytest.fixture(params=STOPPING_CONFIGS.keys())
+def stopping_config(request):
+    """Parametrized stopping configuration fixture."""
+    return STOPPING_CONFIGS[request.param]
+
+
+@pytest.fixture
+def mock_evaluation_result():
+    """Create a single mock evaluation result."""
+    from src.dspy_gepa.core.interfaces import EvaluationResult, ObjectiveEvaluation, SolutionMetadata, OptimizationDirection
     
-    return MockDSPYModule
-
-@pytest.fixture
-def mock_candidate():
-    """Create a mock GEPA candidate for testing."""
-    from gepa.core.candidate import Candidate
-    
-    return Candidate(
-        content='{"class_name": "MockModule", "module": "test.mock", "parameters": {}}',
-        fitness_scores={"accuracy": 0.8, "efficiency": 0.7, "cost": 0.6},
-        generation=0,
-        metadata={"program_type": "dspy", "adapter_version": "0.1.0"}
+    return EvaluationResult(
+        solution_id="test_solution_001",
+        objectives={
+            "accuracy": ObjectiveEvaluation(
+                objective_name="accuracy",
+                score=0.85,
+                direction=OptimizationDirection.MAXIMIZE,
+                evaluation_time=0.1
+            ),
+            "efficiency": ObjectiveEvaluation(
+                objective_name="efficiency",
+                score=0.75,
+                direction=OptimizationDirection.MINIMIZE,
+                evaluation_time=0.05
+            )
+        },
+        overall_score=0.8,
+        evaluation_time=0.15,
+        metadata=SolutionMetadata(
+            generation=1,
+            parent_ids=["parent_001"],
+            mutation_type="test_mutation"
+        )
     )
 
-@pytest.fixture
-def optimization_config():
-    """Configuration for optimization tests."""
-    return {
-        "population_size": 4,
-        "max_generations": 3,
-        "mutation_rate": 0.3,
-        "crossover_rate": 0.7,
-        "objectives": ["accuracy", "efficiency", "cost"],
-        "selection_pressure": 2.0,
-        "elitism_count": 1
-    }
 
-@pytest.fixture
-def performance_baseline():
-    """Baseline performance metrics for regression testing."""
-    return {
-        "max_execution_time": 10.0,  # seconds
-        "max_memory_usage": 100.0,   # MB
-        "min_accuracy": 0.6,
-        "min_efficiency": 0.5,
-        "max_cost_per_eval": 0.01
-    }
-
-@pytest.fixture
-def temp_dir(tmp_path_factory):
-    """Create a temporary directory for test files."""
-    return tmp_path_factory.mktemp("dspy_gepa_test")
-
-@pytest.fixture
-def mock_openai_client():
-    """Mock OpenAI client for API calls."""
-    mock_client = Mock()
-    mock_response = Mock()
-    mock_response.choices = [Mock()]
-    mock_response.choices[0].message.content = "Mock LLM response"
-    mock_response.usage = Mock()
-    mock_response.usage.prompt_tokens = 100
-    mock_response.usage.completion_tokens = 50
-    mock_response.usage.total_tokens = 150
-    mock_client.chat.completions.create.return_value = mock_response
-    return mock_client
-
-@pytest.fixture
-def mock_anthropic_client():
-    """Mock Anthropic client for API calls."""
-    mock_client = Mock()
-    mock_response = Mock()
-    mock_response.content = [Mock(text="Mock Claude response")]
-    mock_response.usage = Mock()
-    mock_response.usage.input_tokens = 100
-    mock_response.usage.output_tokens = 50
-    mock_client.messages.create.return_value = mock_response
-    return mock_client
-
-@pytest.fixture
-def fitness_history():
-    """Sample fitness history for testing adaptive strategies."""
-    return [
-        {"accuracy": 0.5, "efficiency": 0.6, "cost": 0.7},
-        {"accuracy": 0.6, "efficiency": 0.5, "cost": 0.8},
-        {"accuracy": 0.7, "efficiency": 0.7, "cost": 0.6},
-        {"accuracy": 0.8, "efficiency": 0.8, "cost": 0.5},
-        {"accuracy": 0.75, "efficiency": 0.9, "cost": 0.4},
-    ]
-
-@pytest.fixture
-def population_metrics():
-    """Sample population metrics for testing."""
-    return {
-        "diversity": 0.7,
-        "improvement_rate": 0.05,
-        "convergence_rate": 0.3,
-        "avg_fitness": 0.65,
-        "best_fitness": 0.85
-    }
-
-@pytest.fixture(autouse=True)
-def setup_test_environment(monkeypatch):
-    """Set up common test environment patches."""
-    # Mock environment variables
-    monkeypatch.setenv("TESTING", "true")
-    monkeypatch.setenv("DSPY_GEPA_TEST_MODE", "true")
-    
-    # Mock external dependencies
-    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
-
-@pytest.fixture
-def benchmark_data():
-    """Data for performance benchmarking."""
-    return {
-        "small_dataset": list(range(10)),
-        "medium_dataset": list(range(100)),
-        "large_dataset": list(range(1000)),
-        "complex_prompts": [
-            "Analyze the following text and extract key insights: {text}",
-            "Translate the following content while preserving meaning: {content}",
-            "Summarize the main points of the following document: {document}",
-            "Classify the sentiment of the following text: {text}",
-            "Generate a creative response to: {prompt}"
-        ]
-    }
-
-# Performance monitoring fixture
+# Performance testing fixtures
 @pytest.fixture
 def performance_monitor():
-    """Fixture to monitor performance during tests."""
-    class PerformanceMonitor:
-        def __init__(self):
-            self.start_time = None
-            self.memory_start = None
-            self.metrics = {}
-            
-        def start(self):
-            self.start_time = time.time()
+    """Monitor performance during tests."""
+    import time
+    from contextlib import contextmanager
+    
+    @contextmanager
+    def monitor():
+        start_time = time.time()
+        yield
+        duration = time.time() - start_time
+        # Could add assertions about duration here
+        print(f"Test duration: {duration:.3f}s")
+    
+    return monitor
+
+
+# Thread safety testing fixture
+@pytest.fixture
+def thread_safety_test():
+    """Test thread safety of components."""
+    import threading
+    import time
+    from typing import Callable
+    
+    def run_concurrently(func: Callable, num_threads: int = 5, iterations: int = 100) -> Dict[str, Any]:
+        """Run function concurrently and return results."""
+        results = []
+        errors = []
+        
+        def worker():
             try:
-                import psutil
-                process = psutil.Process()
-                self.memory_start = process.memory_info().rss / 1024 / 1024  # MB
-            except ImportError:
-                self.memory_start = 0
-                
-        def stop(self):
-            if self.start_time:
-                execution_time = time.time() - self.start_time
-                self.metrics["execution_time"] = execution_time
-                
-                try:
-                    import psutil
-                    process = psutil.Process()
-                    memory_end = process.memory_info().rss / 1024 / 1024  # MB
-                    self.metrics["memory_used"] = memory_end - (self.memory_start or 0)
-                except ImportError:
-                    self.metrics["memory_used"] = 0
-                    
-            return self.metrics
-            
-        def __enter__(self):
-            self.start()
-            return self
-            
-        def __exit__(self, exc_type, exc_val, exc_tb):
-            return self.stop()
-    
-    return PerformanceMonitor()
-
-# Custom markers
-def pytest_configure(config):
-    """Configure custom pytest markers."""
-    config.addinivalue_line(
-        "markers", 'slow: marks tests as slow (deselect with \'-m "not slow"\')'
-    )
-    config.addinivalue_line(
-        "markers", "integration: marks tests as integration tests"
-    )
-    config.addinivalue_line(
-        "markers", "unit: marks tests as unit tests"
-    )
-    config.addinivalue_line(
-        "markers", "performance: marks tests as performance benchmarks"
-    )
-    
-    # Set CI environment detection
-    import os
-    if not os.getenv('CI'):
-        # Default settings for local development
-        os.environ['PYTEST_CURRENT_TEST'] = '1'  # Flag for test environment
-
-
-def pytest_collection_modifyitems(config, items):
-    """Modify test collection to add markers based on environment."""
-    import os
-    
-    # In CI, automatically skip slow tests unless explicitly requested
-    if os.getenv('CI') and 'slow' not in config.option.markexpr:
-        skip_slow = pytest.mark.skip(reason="Skipping slow tests in CI")
-        for item in items:
-            if "slow" in item.keywords:
-                item.add_marker(skip_slow)
-
-# Helper functions for tests
-def create_test_candidate(content: str = "test content", fitness: Dict = None) -> "Candidate":
-    """Helper to create test candidates."""
-    from gepa.core.candidate import Candidate
-    
-    return Candidate(
-        content=content,
-        fitness_scores=fitness or {"accuracy": 0.5, "efficiency": 0.5},
-        generation=0,
-        metadata={"test": True}
-    )
-
-def assert_performance_within_baseline(metrics: Dict, baseline: Dict):
-    """Assert that performance metrics are within baseline limits."""
-    for metric, value in metrics.items():
-        if metric in baseline:
-            limit = baseline[metric]
-            if metric.startswith("max"):
-                assert value <= limit, f"{metric} {value} exceeds limit {limit}"
-            elif metric.startswith("min"):
-                assert value >= limit, f"{metric} {value} below minimum {limit}"
-
-
-def get_ci_friendly_config(base_config: Dict) -> Dict:
-    """Get CI-friendly configuration based on environment."""
-    import os
-    
-    if os.getenv('CI'):
-        # Reduce resource usage in CI
+                for _ in range(iterations):
+                    result = func()
+                    results.append(result)
+            except Exception as e:
+                errors.append(e)
+        
+        threads = []
+        for _ in range(num_threads):
+            thread = threading.Thread(target=worker)
+            threads.append(thread)
+            thread.start()
+        
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join(timeout=30)  # 30 second timeout
+        
         return {
-            **base_config,
-            'max_generations': max(1, base_config.get('max_generations', 3) // 3),
-            'population_size': max(1, base_config.get('population_size', 5) // 2),
-            'timeout_seconds': base_config.get('timeout_seconds', 30) // 2,
+            "results": results,
+            "errors": errors,
+            "total_calls": len(results),
+            "total_errors": len(errors),
+            "success_rate": len(results) / (len(results) + len(errors)) if (len(results) + len(errors)) > 0 else 0
         }
-    return base_config.copy()
-
-
-def is_ci_environment() -> bool:
-    """Check if we're running in CI environment."""
-    import os
-    return bool(os.getenv('CI') or os.getenv('GITHUB_ACTIONS') or os.getenv('GITLAB_CI'))
-
-# Mock DSPY imports patch
-@pytest.fixture(autouse=True)
-def mock_dspy_imports(monkeypatch):
-    """Mock DSPY imports for tests where DSPY is not available."""
-    mock_modules = {
-        'dspy': MOCK_DSPY,
-        'dspy.predict': Mock(),
-        'dspy.teleprompt': Mock(),
-        'dspy.evaluate': Mock(),
-    }
     
-    for module_name, mock_module in mock_modules.items():
-        monkeypatch.setitem(sys.modules, module_name, mock_module)
+    return run_concurrently
+
+
+# Logging capture fixture
+@pytest.fixture
+def log_capture(caplog):
+    """Enhanced log capture with better filtering."""
+    import logging
+    
+    # Set up log capture
+    caplog.set_level(logging.DEBUG)
+    
+    class LogCapture:
+        def __init__(self, caplog):
+            self.caplog = caplog
+        
+        def get_logs_by_level(self, level: str) -> list:
+            """Get logs filtered by level."""
+            return [record for record in self.caplog.records if record.levelname == level.upper()]
+        
+        def get_error_logs(self) -> list:
+            """Get all error logs."""
+            return self.get_logs_by_level("ERROR")
+        
+        def get_warning_logs(self) -> list:
+            """Get all warning logs."""
+            return self.get_logs_by_level("WARNING")
+        
+        def assert_no_errors(self) -> None:
+            """Assert that no error logs were generated."""
+            error_logs = self.get_error_logs()
+            if error_logs:
+                error_messages = [log.message for log in error_logs]
+                raise AssertionError(f"Unexpected error logs: {error_messages}")
+        
+        def assert_no_warnings(self) -> None:
+            """Assert that no warning logs were generated."""
+            warning_logs = self.get_warning_logs()
+            if warning_logs:
+                warning_messages = [log.message for log in warning_logs]
+                raise AssertionError(f"Unexpected warning logs: {warning_messages}")
+    
+    return LogCapture(caplog)

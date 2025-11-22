@@ -3,12 +3,12 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/dspy_gepa", "src/gepa"]
+packages = ["src/dspy_gepa"]
 
 [project]
 name = "dspy-gepa"
 version = "0.1.0"
-description = "Advanced prompt optimization framework extending GEPA with novel DSPy integration algorithms for evolutionary text component refinement"
+description = "Simplified interface for official DSPY GEPA integration with real LLM provider support"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -29,15 +29,16 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "gepa>=0.0.22",
-    # DSPy is optional - install with 'dspy-gepa[dspy-full]' for full functionality
-    "litellm>=1.40.0",
-    "requests>=2.28.0",
-    "python-dotenv>=1.0.0",
-    "tqdm>=4.66.0",
-    "psutil>=7.1.3",
+    # Core DSPY with GEPA integration
+    "dspy>=2.6.27",
+    # Essential utilities
     "pydantic>=2.0.0",
     "numpy>=1.24.0",
+    "python-dotenv>=1.0.0",
+    "tqdm>=4.66.0",
+    "requests>=2.28.0",
+    "dspy-ai>=3.0.4",
+    "matplotlib>=3.10.7",
 ]
 
 [project.optional-dependencies]
@@ -52,14 +53,26 @@ llm-providers = [
     "dspy-gepa[openai,anthropic]",
 ]
 
-# Core dependencies for different use cases
-dspy-full = [
-    "dspy>=2.4.0",
-    "dspy-gepa[llm-providers]",
+# Visualization dependencies
+visualization = [
+    "matplotlib>=3.5.0",
+    "plotly>=5.0.0",
 ]
-gepa-only = [
-    # GEPA functionality without DSPy
-    "dspy-gepa[llm-providers]",
+visualization-basic = [
+    "matplotlib>=3.5.0",
+]
+visualization-interactive = [
+    "plotly>=5.0.0",
+]
+
+# Combined dependencies
+visualization-full = [
+    "dspy-gepa[visualization]",
+]
+
+# Full installation with all providers
+full = [
+    "dspy-gepa[llm-providers,visualization]",
 ]
 
 # Development dependencies
@@ -75,7 +88,7 @@ dev = [
     "types-PyYAML>=6.0.0",
     "types-requests>=2.31.0",
     # Include LLM providers for testing
-    "dspy-gepa[llm-providers]",
+    "dspy-gepa[llm-providers,visualization]",
 ]
 
 [project.urls]
